@@ -2,7 +2,9 @@ package org.example.taskmanagment.controllers;
 
 import jakarta.validation.Valid;
 import org.example.taskmanagment.entities.Project;
+import org.example.taskmanagment.entities.Task;
 import org.example.taskmanagment.services.ProjectService;
+import org.example.taskmanagment.services.TaskService;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.stereotype.Controller;
 
@@ -13,7 +15,9 @@ import java.util.List;
 @RequestMapping("/projects")
 public class ProjectController {
     private final ProjectService projectService;
-    public ProjectController(ProjectService projectService) {
+    private final TaskService taskService;
+    public ProjectController(ProjectService projectService, TaskService taskService) {
+        this.taskService = taskService;
         this.projectService = projectService;
     }
 
@@ -30,6 +34,11 @@ public class ProjectController {
     @GetMapping("/{id}")
     public Project getProject(@PathVariable Long id) {
         return projectService.getProject(id);
+    }
+
+    @GetMapping("/project/{id}/tasks")
+    public List<Task> geTasksByProjectId(@PathVariable Long id) {
+        return taskService.getTasksByProjectId(id);
     }
 
     @GetMapping

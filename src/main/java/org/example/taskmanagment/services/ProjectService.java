@@ -7,6 +7,7 @@ import org.example.taskmanagment.exceptions.UserNotFoundException;
 import org.example.taskmanagment.repositories.ProjectRepository;
 import org.example.taskmanagment.repositories.UserRepository;
 import org.springframework.stereotype.Service;
+import org.springframework.web.bind.annotation.PathVariable;
 
 import java.util.List;
 
@@ -47,6 +48,13 @@ public class ProjectService {
     public Project getProject(Long id) {
         return projectRepository.findById(id)
                 .orElseThrow(() -> new ProjectNotFoundException("Project with id " + id + " not found"));
+    }
+
+    public List<Project> getProjectsByUserId(Long id) {
+        User user = userRepository.findById(id)
+                .orElseThrow(() -> new UserNotFoundException("User with id " + id + " not found"));
+
+        return projectRepository.findAllByUserId(id);
     }
 
     public List<Project> getAllProjects() {

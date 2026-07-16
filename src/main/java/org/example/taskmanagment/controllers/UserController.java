@@ -1,10 +1,12 @@
 package org.example.taskmanagment.controllers;
 
 import jakarta.validation.Valid;
+import org.example.taskmanagment.entities.Project;
 import org.example.taskmanagment.entities.User;
 
 import java.util.List;
 
+import org.example.taskmanagment.services.ProjectService;
 import org.example.taskmanagment.services.UserService;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
@@ -15,8 +17,10 @@ import org.springframework.web.bind.annotation.*;
 public class UserController {
 
     private final UserService userService;
-    public UserController(UserService userService) {
+    private final ProjectService projectService;
+    public UserController(UserService userService, ProjectService projectService) {
         this.userService = userService;
+        this.projectService = projectService;
     }
 
     @PostMapping
@@ -37,6 +41,11 @@ public class UserController {
     @GetMapping
     public List<User> getAllUsers() {
         return userService.getAllUsers();
+    }
+
+    @GetMapping("user/{id}/projects")
+    public List<Project> getProjectsByUserId(@PathVariable Long id) {
+        return projectService.getProjectsByUserId(id);
     }
 
     @DeleteMapping("/{id}")

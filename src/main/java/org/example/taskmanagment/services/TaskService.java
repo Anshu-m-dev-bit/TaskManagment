@@ -83,6 +83,12 @@ public class TaskService {
         return taskRepository.findAll();
     }
 
+    public List<Task> getTasksByProjectId(Long id) {
+        Project project = projectRepository.findById(id)
+                .orElseThrow(() -> new ProjectNotFoundException("Project with id " + id + " not found"));
+        return taskRepository.findAllByProjectId(id);
+    }
+
     public void deleteTask(Long id) {
         Task task = taskRepository.findById(id)
                 .orElseThrow(() -> new TaskNotFoundException("Task with id " + id + " not found"));
