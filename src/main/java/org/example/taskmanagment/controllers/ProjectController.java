@@ -36,7 +36,7 @@ public class ProjectController {
         return projectService.getProject(id);
     }
 
-    @GetMapping("/project/{id}/tasks")
+    @GetMapping("/{id}/tasks")
     public List<Task> geTasksByProjectId(@PathVariable Long id) {
         return taskService.getTasksByProjectId(id);
     }

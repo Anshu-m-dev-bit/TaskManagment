@@ -79,7 +79,7 @@ public class TaskService {
                 .orElseThrow(() -> new TaskNotFoundException("Task with id " + id + " not found"));
     }
 
-    public List<Task> getAllTasks() {
+    public List<Task> getAllTasks(Task.CurrStatus status, Task.CurrPriority priority) {
         return taskRepository.findAll();
     }
 

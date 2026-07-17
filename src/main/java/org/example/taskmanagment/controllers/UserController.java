@@ -43,7 +43,7 @@ public class UserController {
         return userService.getAllUsers();
     }
 
-    @GetMapping("user/{id}/projects")
+    @GetMapping("/{id}/projects")
     public List<Project> getProjectsByUserId(@PathVariable Long id) {
         return projectService.getProjectsByUserId(id);
     }

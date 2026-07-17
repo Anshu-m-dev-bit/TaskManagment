@@ -1,5 +1,6 @@
 package org.example.taskmanagment.controllers;
 
+import jakarta.annotation.Priority;
 import jakarta.validation.Valid;
 import org.example.taskmanagment.entities.Task;
 import org.example.taskmanagment.services.TaskService;
@@ -33,8 +34,8 @@ public class TaskController {
     }
 
     @GetMapping
-    public List<Task> getAllTask() {
-        return taskService.getAllTasks();
+    public List<Task> getAllTask(@RequestParam (required = false) Task.CurrStatus status, @RequestParam (required = false) Task.CurrPriority priority) {
+        return taskService.getAllTasks(status, priority);
     }
 
     @DeleteMapping("/{id}")
