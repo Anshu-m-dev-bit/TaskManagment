@@ -89,4 +89,4 @@ Implemented custom exceptions:
 - `UserNotFoundException`
 - `ProjectNotFoundException`
 - `TaskNotFoundException`
-
+- `ProjectAccessDeniedException`
