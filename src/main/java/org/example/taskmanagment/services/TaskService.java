@@ -80,6 +80,15 @@ public class TaskService {
     }
 
     public List<Task> getAllTasks(Task.CurrStatus status, Task.CurrPriority priority) {
+        if(status != null && priority == null) {
+            return taskRepository.findAllByStatus(status);
+        }
+        if (status == null && priority != null) {
+            return taskRepository.findAllByPriority(priority);
+        }
+        if(status != null && priority != null) {
+            return taskRepository.findAllByStatusAndPriority(status, priority);
+        }
         return taskRepository.findAll();
     }
 
