@@ -5,6 +5,7 @@ import org.example.taskmanagment.entities.Project;
 import org.example.taskmanagment.entities.Task;
 import org.example.taskmanagment.services.ProjectService;
 import org.example.taskmanagment.services.TaskService;
+import org.springframework.data.domain.Page;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.stereotype.Controller;
 
@@ -37,13 +38,16 @@ public class ProjectController {
     }
 
     @GetMapping("/{id}/tasks")
-    public List<Task> geTasksByProjectId(@PathVariable Long id) {
-        return taskService.getTasksByProjectId(id);
+    public Page<Task> geTasksByProjectId(@PathVariable Long id, @RequestParam (required = false) Integer page,
+                                         @RequestParam (required = false) Integer size) {
+
+        return taskService.getTasksByProjectId(id, page, size);
     }
 
     @GetMapping
-    public List<Project> getAllProjects() {
-        return projectService.getAllProjects();
+    public Page<Project> getAllProjects(@RequestParam (required = false) Integer page,
+                                        @RequestParam (required = false) Integer size) {
+        return projectService.getAllProjects(page, size);
     }
 
     @DeleteMapping("/{id}")

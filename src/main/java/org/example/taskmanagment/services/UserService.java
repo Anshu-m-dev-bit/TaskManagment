@@ -4,6 +4,8 @@ import org.example.taskmanagment.entities.User;
 import org.example.taskmanagment.exceptions.UserEmailAlreadyExistsException;
 import org.example.taskmanagment.exceptions.UserNotFoundException;
 import org.example.taskmanagment.repositories.UserRepository;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 
 import javax.sound.midi.MidiDevice;
@@ -39,8 +41,11 @@ public class UserService {
                 .orElseThrow(() -> new UserNotFoundException("User with id " + id + " not found"));
     }
 
-    public List<User> getAllUsers() {
-        return userRepository.findAll();
+    public Page<User> getAllUsers(Integer page, Integer size) {
+        page = page == null ? 0 : page;
+        size = size == null ? 10 : size;
+        PageRequest pageRequest = PageRequest.of(page, size);
+        return userRepository.findAll(pageRequest);
     }
 
     public void deleteUser(Long id) {

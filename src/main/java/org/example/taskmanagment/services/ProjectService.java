@@ -6,6 +6,8 @@ import org.example.taskmanagment.exceptions.ProjectNotFoundException;
 import org.example.taskmanagment.exceptions.UserNotFoundException;
 import org.example.taskmanagment.repositories.ProjectRepository;
 import org.example.taskmanagment.repositories.UserRepository;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.web.bind.annotation.PathVariable;
 
@@ -57,8 +59,11 @@ public class ProjectService {
         return projectRepository.findAllByUserId(id);
     }
 
-    public List<Project> getAllProjects() {
-        return projectRepository.findAll();
+    public Page<Project> getAllProjects(Integer page, Integer size) {
+        page = page == null ? 0 : page;
+        size = size == null ? 10 : size;
+        PageRequest pageRequest = PageRequest.of(page, size);
+        return projectRepository.findAll(pageRequest);
     }
 
     public void deleteProject(Long id) {

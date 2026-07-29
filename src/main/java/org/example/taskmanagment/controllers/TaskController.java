@@ -4,6 +4,7 @@ import jakarta.annotation.Priority;
 import jakarta.validation.Valid;
 import org.example.taskmanagment.entities.Task;
 import org.example.taskmanagment.services.TaskService;
+import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 
@@ -34,8 +35,11 @@ public class TaskController {
     }
 
     @GetMapping
-    public List<Task> getAllTask(@RequestParam (required = false) Task.CurrStatus status, @RequestParam (required = false) Task.CurrPriority priority) {
-        return taskService.getAllTasks(status, priority);
+    public Page<Task> getAllTasks(@RequestParam (required = false) Task.CurrStatus status,
+                                  @RequestParam (required = false) Task.CurrPriority priority,
+                                  @RequestParam (required = false) Integer page,
+                                  @RequestParam (required = false) Integer size) {
+        return taskService.getAllTasks(status, priority, page, size);
     }
 
     @DeleteMapping("/{id}")

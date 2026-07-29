@@ -10,6 +10,8 @@ import org.example.taskmanagment.exceptions.UserNotFoundException;
 import org.example.taskmanagment.repositories.ProjectRepository;
 import org.example.taskmanagment.repositories.TaskRepository;
 import org.example.taskmanagment.repositories.UserRepository;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -79,23 +81,39 @@ public class TaskService {
                 .orElseThrow(() -> new TaskNotFoundException("Task with id " + id + " not found"));
     }
 
-    public List<Task> getAllTasks(Task.CurrStatus status, Task.CurrPriority priority) {
+    public Page<Task> getAllTasks(Task.CurrStatus status, Task.CurrPriority priority,
+                                  Integer page, Integer size) {
+        page = page == null ? 0 : page;
+        size = size == null ? 10 : size;
+        PageRequest pageRequest = PageRequest.of(page, size);
         if(status != null && priority == null) {
-            return taskRepository.findAllByStatus(status);
+            return taskRepository.findAllByStatus(status, pageRequest);
         }
         if (status == null && priority != null) {
-            return taskRepository.findAllByPriority(priority);
+            return taskRepository.findAllByPriority(priority, pageRequest);
         }
         if(status != null && priority != null) {
-            return taskRepository.findAllByStatusAndPriority(status, priority);
+            return taskRepository.findAllByStatusAndPriority(status, priority, pageRequest);
         }
-        return taskRepository.findAll();
+        return taskRepository.findAll(pageRequest);
     }
 
-    public List<Task> getTasksByProjectId(Long id) {
+    public Page<Task> getTasksByProjectId(Long id, Integer page, Integer size) {
+        page = page == null ? 0 : page;
+        size = size == null ? 10 : size;
+        PageRequest pageRequest = PageRequest.of(page, size);
         Project project = projectRepository.findById(id)
                 .orElseThrow(() -> new ProjectNotFoundException("Project with id " + id + " not found"));
-        return taskRepository.findAllByProjectId(id);
+        return taskRepository.findAllByProjectId(id, pageRequest);
+    }
+
+    public Page<Task> getTasksByUserId(Long id, Integer page, Integer size) {
+        page = page == null ? 0 : page;
+        size = size == null ? 10 : size;
+        PageRequest pageRequest = PageRequest.of(page, size);
+        User user = userRepository.findById(id)
+                .orElseThrow(() -> new UserNotFoundException("User with id " + id + " not found"));
+        return taskRepository.findAllByUserId(id, pageRequest);
     }
 
     public void deleteTask(Long id) {
