@@ -34,4 +34,14 @@ public class GlobalExceptionHandler {
         return new ResponseEntity<>("Error: " + ex.getMessage(), HttpStatus.CONFLICT);
     }
 
+    @ExceptionHandler(InvalidSortFieldException.class)
+    public ResponseEntity<String> handleInvalidSortFieldException(InvalidSortFieldException ex) {
+        return new ResponseEntity<>("Error: " + ex.getMessage(), HttpStatus.BAD_REQUEST);
+    }
+
+    @ExceptionHandler(InvalidSortDirectionException.class)
+    public ResponseEntity<String> handleInvalidSortDirectionException(InvalidSortDirectionException ex) {
+        return new ResponseEntity<>("Error: " + ex.getMessage(), HttpStatus.BAD_REQUEST);
+    }
+
 }

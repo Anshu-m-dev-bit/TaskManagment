@@ -3,30 +3,30 @@ package org.example.taskmanagment.services;
 import org.example.taskmanagment.entities.Project;
 import org.example.taskmanagment.entities.Task;
 import org.example.taskmanagment.entities.User;
-import org.example.taskmanagment.exceptions.ProjectAccessDeniedException;
-import org.example.taskmanagment.exceptions.ProjectNotFoundException;
-import org.example.taskmanagment.exceptions.TaskNotFoundException;
-import org.example.taskmanagment.exceptions.UserNotFoundException;
+import org.example.taskmanagment.exceptions.*;
 import org.example.taskmanagment.repositories.ProjectRepository;
 import org.example.taskmanagment.repositories.TaskRepository;
 import org.example.taskmanagment.repositories.UserRepository;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
 
 @Service
 public class TaskService {
     private final UserRepository userRepository;
     private final ProjectRepository projectRepository;
     private final TaskRepository taskRepository;
+
     public TaskService(UserRepository userRepository, ProjectRepository projectRepository, TaskRepository taskRepository) {
         this.userRepository = userRepository;
         this.projectRepository = projectRepository;
         this.taskRepository = taskRepository;
     }
+
+    private static final Set<String> allowedSortFields = new HashSet<>(Arrays.asList("id", "title", "createdAt", "dueDate"));
 
     public Task createTask(Task task) {
         Long userId = task.getUser().getId();
@@ -82,10 +82,20 @@ public class TaskService {
     }
 
     public Page<Task> getAllTasks(Task.CurrStatus status, Task.CurrPriority priority,
-                                  Integer page, Integer size) {
+                                  Integer page, Integer size, String sortField, String sortDirection) {
+
         page = page == null ? 0 : page;
         size = size == null ? 10 : size;
-        PageRequest pageRequest = PageRequest.of(page, size);
+        sortField = sortField == null ? "createdAt" : sortField;
+        String direction = sortDirection == null ? "asc" : sortDirection;
+
+        if (!allowedSortFields.contains(sortField)) throw new InvalidSortFieldException("Invalid sort field: " + sortField);
+        Sort sort = Sort.by(Sort.Direction.fromOptionalString(direction)
+                .orElseThrow(() -> new InvalidSortDirectionException("Invalid sort direction " + direction)),
+                sortField);
+
+
+        PageRequest pageRequest = PageRequest.of(page, size, sort);
         if(status != null && priority == null) {
             return taskRepository.findAllByStatus(status, pageRequest);
         }

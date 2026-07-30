@@ -38,8 +38,10 @@ public class TaskController {
     public Page<Task> getAllTasks(@RequestParam (required = false) Task.CurrStatus status,
                                   @RequestParam (required = false) Task.CurrPriority priority,
                                   @RequestParam (required = false) Integer page,
-                                  @RequestParam (required = false) Integer size) {
-        return taskService.getAllTasks(status, priority, page, size);
+                                  @RequestParam (required = false) Integer size,
+                                  @RequestParam (required = false) String sortField,
+                                  @RequestParam (required = false) String sortDirection) {
+        return taskService.getAllTasks(status, priority, page, size, sortField, sortDirection);
     }
 
     @DeleteMapping("/{id}")
