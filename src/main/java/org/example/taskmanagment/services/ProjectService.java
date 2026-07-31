@@ -2,16 +2,22 @@ package org.example.taskmanagment.services;
 
 import org.example.taskmanagment.entities.Project;
 import org.example.taskmanagment.entities.User;
+import org.example.taskmanagment.exceptions.InvalidSortDirectionException;
+import org.example.taskmanagment.exceptions.InvalidSortFieldException;
 import org.example.taskmanagment.exceptions.ProjectNotFoundException;
 import org.example.taskmanagment.exceptions.UserNotFoundException;
 import org.example.taskmanagment.repositories.ProjectRepository;
 import org.example.taskmanagment.repositories.UserRepository;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.web.bind.annotation.PathVariable;
 
+import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 @Service
 public class ProjectService {
@@ -22,7 +28,7 @@ public class ProjectService {
         this.userRepository = userRepository;
         this.projectRepository = projectRepository;
     }
-
+    private final static Set<String> allowedSortFields = new HashSet<>(Arrays.asList("id", "name"));
     public Project createProject(Project project) {
         Long userId = project.getUser().getId();
         User user = userRepository.findById(userId)
@@ -59,10 +65,17 @@ public class ProjectService {
         return projectRepository.findAllByUserId(id);
     }
 
-    public Page<Project> getAllProjects(Integer page, Integer size) {
+    public Page<Project> getAllProjects(Integer page, Integer size, String sortField, String sortDirection) {
         page = page == null ? 0 : page;
         size = size == null ? 10 : size;
-        PageRequest pageRequest = PageRequest.of(page, size);
+        sortField = sortField == null ? "id" : sortField;
+        String direction = sortDirection == null ? "asc" : sortDirection;
+
+        if(!allowedSortFields.contains(sortField)) throw new InvalidSortFieldException("Invalid sort field: " + sortField);
+        Sort sort = Sort.by(Sort.Direction.fromOptionalString(direction)
+                .orElseThrow(() -> new InvalidSortDirectionException("Invalid sort direction " + direction)),
+                sortField);
+        PageRequest pageRequest = PageRequest.of(page, size, sort);
         return projectRepository.findAll(pageRequest);
     }
 

@@ -46,8 +46,10 @@ public class ProjectController {
 
     @GetMapping
     public Page<Project> getAllProjects(@RequestParam (required = false) Integer page,
-                                        @RequestParam (required = false) Integer size) {
-        return projectService.getAllProjects(page, size);
+                                        @RequestParam (required = false) Integer size,
+                                        @RequestParam (required = false) String sortField,
+                                        @RequestParam (required = false) String sortDirection) {
+        return projectService.getAllProjects(page, size, sortField, sortDirection);
     }
 
     @DeleteMapping("/{id}")

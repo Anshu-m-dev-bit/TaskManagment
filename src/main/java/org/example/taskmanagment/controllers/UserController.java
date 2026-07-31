@@ -45,8 +45,10 @@ public class UserController {
 
     @GetMapping
     public Page<User> getAllUsers(@RequestParam (required = false) Integer page,
-                                  @RequestParam (required = false) Integer size) {
-        return userService.getAllUsers(page, size);
+                                  @RequestParam (required = false) Integer size,
+                                  @RequestParam (required = false) String sortField,
+                                  @RequestParam (required = false) String sortDirection) {
+        return userService.getAllUsers(page, size, sortField, sortDirection);
     }
 
     @GetMapping("/{id}/projects")
