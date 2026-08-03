@@ -26,7 +26,7 @@ public class TaskService {
         this.taskRepository = taskRepository;
     }
 
-    private static final Set<String> allowedSortFields = new HashSet<>(Arrays.asList("id", "title", "createdAt", "dueDate"));
+    private static final Set<String> allowedSortFields = new HashSet<>(Arrays.asList("id", "title", "createdAt", "dueDate", "priority"));
 
     public Task createTask(Task task) {
         Long userId = task.getUser().getId();
@@ -96,13 +96,17 @@ public class TaskService {
 
 
         PageRequest pageRequest = PageRequest.of(page, size, sort);
-        if(status != null && priority == null) {
-            return taskRepository.findAllByStatus(status, pageRequest);
+        if(sortField.equals("priority")) {
+            if(status == null) return taskRepository.findAllTasksByPriority(pageRequest);
+            else return taskRepository.findAllByStatusOrderByPriority(status, pageRequest);
+        }
+        if (status != null && priority == null) {
+            return taskRepository.findAllByStatusOrderByPriority(status, pageRequest);
         }
         if (status == null && priority != null) {
             return taskRepository.findAllByPriority(priority, pageRequest);
         }
-        if(status != null && priority != null) {
+        if (status != null && priority != null) {
             return taskRepository.findAllByStatusAndPriority(status, priority, pageRequest);
         }
         return taskRepository.findAll(pageRequest);
