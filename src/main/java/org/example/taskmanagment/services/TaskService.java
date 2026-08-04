@@ -40,9 +40,11 @@ public class TaskService {
                 .orElseThrow(() -> new ProjectNotFoundException("Project with id " + projectId + " not found"));
         task.setProject(project);
 
-        if(!Objects.equals(project.getUser().getId(), userId)) {
-            throw new ProjectAccessDeniedException("Project " + projectId + " does not belong to the User " + userId );
-        }
+        Set<User> givenUsers= project.getUsers();
+        if(givenUsers.stream()
+                .noneMatch(eachUser -> eachUser.getId().equals(user.getId())))
+                throw new ProjectAccessDeniedException("Project " + projectId + " does not belong to the User " + userId);
+
         return taskRepository.save(task);
     }
 
@@ -61,8 +63,10 @@ public class TaskService {
                 .orElseThrow(() -> new ProjectNotFoundException("Project with id " + projectId + " not found"));
         task.setProject(project);
 
-        if(!Objects.equals(project.getUser().getId(), userId)) {
-            throw new ProjectAccessDeniedException("Project " + projectId + " does not belong to the User " + userId );
+        Set<User> givenUsers= project.getUsers();
+        if(givenUsers.stream()
+                .noneMatch(eachUser -> eachUser.getId().equals(user.getId()))) {
+                throw new ProjectAccessDeniedException("Project " + projectId + " does not belong to the User " + userId);
         }
 
         existingTask.setTitle(task.getTitle());

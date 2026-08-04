@@ -14,10 +14,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.web.bind.annotation.PathVariable;
 
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 @Service
 public class ProjectService {
@@ -29,28 +26,65 @@ public class ProjectService {
         this.projectRepository = projectRepository;
     }
     private final static Set<String> allowedSortFields = new HashSet<>(Arrays.asList("id", "name"));
+
     public Project createProject(Project project) {
-        Long userId = project.getUser().getId();
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new UserNotFoundException("User with id " + userId + " not found"));
-        project.setUser(user);
-        return projectRepository.save(project);
+         Set<User> givenUsers= project.getUsers();
+         Set<User> validatedUsers = new HashSet<>();
+         Set<Long> invalidUserIds = new HashSet<>();
+         for (User user: givenUsers) {
+             Long userId = user.getId();
+             Optional<User> extractedUser = userRepository.findById(userId);
+             if (extractedUser.isPresent()) {
+                 User presentUser = extractedUser.get();
+//                 presentUser.addProject(project);
+                 validatedUsers.add(presentUser);
+             }
+             else {
+                 invalidUserIds.add(userId);
+             }
+         }
+         if(!invalidUserIds.isEmpty()) throw new UserNotFoundException("Users with id(s) " + invalidUserIds + "does not exists");
+         project.setUsers(validatedUsers);
+
+         for (User user: validatedUsers) {
+             user.addProject(project);
+         }
+
+         return projectRepository.save(project);
     }
 
     public Project updateProject(Long id, Project project) {
         Project existingProject = projectRepository.findById(id)
                 .orElseThrow(() -> new ProjectNotFoundException("Project with id " + id + " not found"));
 
-        Long userId = project.getUser().getId();
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new UserNotFoundException("User with id " + userId + " not found"));
-        project.setUser(user);
+        Set<User> givenUsers= project.getUsers();
+        Set<User> validatedUsers = new HashSet<>();
+        Set<Long> invalidUserIds = new HashSet<>();
+         for (User user: givenUsers) {
+             Long userId = user.getId();
+             Optional<User> extractedUser = userRepository.findById(userId);
+             if (extractedUser.isPresent()) {
+                 User presentUser = extractedUser.get();
+//                 presentUser.addProject(project);
+                 validatedUsers.add(presentUser);
+             }
+             else {
+                 invalidUserIds.add(userId);
+             }
+         }
 
-        existingProject.setName(project.getName());
-        existingProject.setDescription(project.getDescription());
-        existingProject.setUser(project.getUser());
+         if(!invalidUserIds.isEmpty()) throw new UserNotFoundException("Users with id(s) " + invalidUserIds + "does not exists");
+         project.setUsers(validatedUsers);
 
-        return projectRepository.save(existingProject);
+         for (User user: validatedUsers) {
+            user.addProject(existingProject);
+         }
+
+         existingProject.setName(project.getName());
+         existingProject.setDescription(project.getDescription());
+         existingProject.setUsers(project.getUsers());
+
+         return projectRepository.save(existingProject);
     }
 
     public Project getProject(Long id) {
@@ -62,7 +96,7 @@ public class ProjectService {
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new UserNotFoundException("User with id " + id + " not found"));
 
-        return projectRepository.findAllByUserId(id);
+        return projectRepository.findAllByUsersId(id);
     }
 
     public Page<Project> getAllProjects(Integer page, Integer size, String sortField, String sortDirection) {

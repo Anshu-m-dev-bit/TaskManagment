@@ -5,7 +5,9 @@ import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import org.antlr.v4.runtime.misc.NotNull;
 
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 @Entity
 @Table(name = "users")
@@ -28,8 +30,13 @@ public class User {
     private String password;
 
     @JsonIgnore
-    @OneToMany(mappedBy = "user")
-    private List<Project> projects;
+    @ManyToMany
+    @JoinTable(
+            name = "User_Project",
+            joinColumns = { @JoinColumn( name = "user_id" ) },
+            inverseJoinColumns = { @JoinColumn( name="project_id" ) }
+    )
+    private Set<Project> projects = new HashSet<>();
 
     @JsonIgnore
     @OneToMany(mappedBy = "user")
@@ -63,12 +70,28 @@ public class User {
         this.password = password;
     }
 
-    public List<Project> getProjects() {
+    public Set<Project> getProjects() {
         return projects;
     }
 
-    public void setProjects(List<Project> projects) {
+    public void setProjects(Set<Project> projects) {
         this.projects = projects;
+    }
+
+    public void addProject(Project project) {
+       if (!projects.contains(project)) {
+           projects.add(project);
+           project.addUser(this);
+       }
+       return ;
+    }
+
+    public void removeProject(Project project) {
+        if (projects.contains(project)) {
+            projects.remove(project);
+            project.removeUser(this);
+        }
+        return ;
     }
 
     public List<Task> getTasks() {

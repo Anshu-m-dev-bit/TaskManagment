@@ -5,7 +5,9 @@ import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import org.hibernate.annotations.Changelog;
 
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 @Entity
 @Table
@@ -21,9 +23,8 @@ public class Project {
     @Column(nullable = true)
     private String description;
 
-    @ManyToOne
-    @JoinColumn(name = "user_id", nullable = false)
-    private User user;
+    @ManyToMany(mappedBy = "projects")
+    Set<User> users = new HashSet<>();
 
     @JsonIgnore
     @OneToMany(mappedBy = "project")
@@ -49,12 +50,28 @@ public class Project {
         this.description = description;
     }
 
-    public User getUser() {
-        return user;
+    public Set<User> getUsers() {
+        return users;
     }
 
-    public void setUser(User user) {
-        this.user = user;
+    public void setUsers(Set<User> users) {
+        this.users = users;
+    }
+
+    public void addUser(User user) {
+        if (!users.contains(user)) {
+            users.add(user);
+            user.addProject(this);
+        }
+        return ;
+    }
+
+    public void removeUser(User user) {
+        if (users.contains(user)) {
+            users.remove(user);
+            user.removeProject(this);
+        }
+        return ;
     }
 
     public List<Task> getTasks() {
