@@ -36,7 +36,6 @@ public class ProjectService {
              Optional<User> extractedUser = userRepository.findById(userId);
              if (extractedUser.isPresent()) {
                  User presentUser = extractedUser.get();
-//                 presentUser.addProject(project);
                  validatedUsers.add(presentUser);
              }
              else {
@@ -65,7 +64,6 @@ public class ProjectService {
              Optional<User> extractedUser = userRepository.findById(userId);
              if (extractedUser.isPresent()) {
                  User presentUser = extractedUser.get();
-//                 presentUser.addProject(project);
                  validatedUsers.add(presentUser);
              }
              else {
@@ -120,4 +118,100 @@ public class ProjectService {
         projectRepository.deleteById(id);
     }
 
+    public Project replaceProjectMembers(Long id, Set<User> givenUsers) {
+        Project project = projectRepository.findById(id)
+                .orElseThrow(() -> new ProjectNotFoundException("Project with id " + id + " not found"));
+
+        Set<User> validatedUsers = new HashSet<>();
+        Set<Long> invalidUserIds = new HashSet<>();
+        for (User user: givenUsers) {
+            Long userId = user.getId();
+            Optional<User> extractedUser = userRepository.findById(userId);
+            if (extractedUser.isPresent()) {
+                User presentUser = extractedUser.get();
+                validatedUsers.add(presentUser);
+            }
+            else {
+                invalidUserIds.add(userId);
+            }
+        }
+
+        if(!invalidUserIds.isEmpty()) throw new UserNotFoundException("Users with id(s) " + invalidUserIds + "does not exists");
+        project.setUsers(validatedUsers);
+
+        for (User user: validatedUsers) {
+            user.addProject(project);
+        }
+
+        return projectRepository.save(project);
+    }
+
+    public Project addProjectMembers(Long id, Set<User> givenUsers) {
+        Project project = projectRepository.findById(id)
+                .orElseThrow(() -> new ProjectNotFoundException("Project with id " + id + " not found"));
+
+        Set<User> validatedUsers = new HashSet<>();
+        Set<Long> invalidUserIds = new HashSet<>();
+        for (User user: givenUsers) {
+            Long userId = user.getId();
+            Optional<User> extractedUser = userRepository.findById(userId);
+            if (extractedUser.isPresent()) {
+                User presentUser = extractedUser.get();
+                validatedUsers.add(presentUser);
+            }
+            else {
+                invalidUserIds.add(userId);
+            }
+        }
+
+        if(!invalidUserIds.isEmpty()) throw new UserNotFoundException("Users with id(s) " + invalidUserIds + "does not exists");
+
+        for (User user: validatedUsers) {
+            user.addProject(project);
+        }
+
+        return projectRepository.save(project);
+    }
+
+    public Project removeProjectMembers(Long id, Set<User> givenUsers) {
+        Project project = projectRepository.findById(id)
+                .orElseThrow(() -> new ProjectNotFoundException("Project with id " + id + " not found"));
+
+        Set<User> availableUsers = project.getUsers();
+        Set<User> validatedUsers = new HashSet<>();
+        Set<Long> absentUser = new HashSet<>();
+        Set<Long> invalidUserIds = new HashSet<>();
+
+        for (User user: givenUsers) {
+            Long userId = user.getId();
+            Optional<User> extractedUser = userRepository.findById(userId);
+            if (extractedUser.isPresent() && availableUsers.contains(extractedUser)) {
+                User presentUser = extractedUser.get();
+                validatedUsers.add(presentUser);
+            }
+            else if (extractedUser.isPresent()) {
+                absentUser.add(userId);
+            }
+            else {
+                invalidUserIds.add(userId);
+            }
+        }
+
+        if(!invalidUserIds.isEmpty()) throw new UserNotFoundException("Users with id(s) " + invalidUserIds + "does not exists");
+        if(!absentUser.isEmpty()) throw new UserNotFoundException("Users with id(s) " + invalidUserIds + "does not belong to this project");
+
+        Integer currentSize = availableUsers.size();
+        Integer removeSize = 0;
+        for (User user: validatedUsers) {
+            if (currentSize > 1) {
+                user.removeProject(project);
+                currentSize--;
+            }
+            else {
+                throw new RuntimeException("All users can't be removed from the project");
+            }
+        }
+        return projectRepository.save(project);
+
+    }
 }

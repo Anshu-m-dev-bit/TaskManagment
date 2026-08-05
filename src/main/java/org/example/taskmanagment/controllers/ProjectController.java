@@ -3,6 +3,7 @@ package org.example.taskmanagment.controllers;
 import jakarta.validation.Valid;
 import org.example.taskmanagment.entities.Project;
 import org.example.taskmanagment.entities.Task;
+import org.example.taskmanagment.entities.User;
 import org.example.taskmanagment.services.ProjectService;
 import org.example.taskmanagment.services.TaskService;
 import org.springframework.data.domain.Page;
@@ -10,6 +11,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.stereotype.Controller;
 
 import java.util.List;
+import java.util.Set;
 
 
 @RestController
@@ -55,5 +57,20 @@ public class ProjectController {
     @DeleteMapping("/{id}")
     public void deleteProject(@PathVariable Long id) {
         projectService.deleteProject(id);
+    }
+
+    @PostMapping("/{id}/users")
+    public Project replaceProjectMembers(@PathVariable Long id, @Valid @RequestBody Set<User> user) {
+        return projectService.replaceProjectMembers(id, user);
+    }
+
+    @PutMapping("/{id}/users")
+    public Project addProjectMembers(@PathVariable Long id, @Valid @RequestBody Set<User> user) {
+        return projectService.addProjectMembers(id, user);
+    }
+
+    @DeleteMapping("/{id}/users")
+    public Project removeProjectMembers(@PathVariable Long id, @Valid @RequestBody Set<User> user) {
+        return projectService.removeProjectMembers(id, user);
     }
 }
