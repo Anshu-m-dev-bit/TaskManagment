@@ -2,10 +2,7 @@ package org.example.taskmanagment.services;
 
 import org.example.taskmanagment.entities.Project;
 import org.example.taskmanagment.entities.User;
-import org.example.taskmanagment.exceptions.InvalidSortDirectionException;
-import org.example.taskmanagment.exceptions.InvalidSortFieldException;
-import org.example.taskmanagment.exceptions.ProjectNotFoundException;
-import org.example.taskmanagment.exceptions.UserNotFoundException;
+import org.example.taskmanagment.exceptions.*;
 import org.example.taskmanagment.repositories.ProjectRepository;
 import org.example.taskmanagment.repositories.UserRepository;
 import org.springframework.data.domain.Page;
@@ -122,6 +119,7 @@ public class ProjectService {
         Project project = projectRepository.findById(id)
                 .orElseThrow(() -> new ProjectNotFoundException("Project with id " + id + " not found"));
 
+        Set<User> availableUsers = new HashSet<>(project.getUsers());
         Set<User> validatedUsers = new HashSet<>();
         Set<Long> invalidUserIds = new HashSet<>();
         for (User user: givenUsers) {
@@ -136,8 +134,11 @@ public class ProjectService {
             }
         }
 
-        if(!invalidUserIds.isEmpty()) throw new UserNotFoundException("Users with id(s) " + invalidUserIds + "does not exists");
-        project.setUsers(validatedUsers);
+        if(!invalidUserIds.isEmpty()) throw new UserNotFoundException("Users with id(s) " + invalidUserIds + " do not exists");
+
+        for (User user: availableUsers) {
+            user.removeProject(project);
+        }
 
         for (User user: validatedUsers) {
             user.addProject(project);
@@ -185,9 +186,8 @@ public class ProjectService {
         for (User user: givenUsers) {
             Long userId = user.getId();
             Optional<User> extractedUser = userRepository.findById(userId);
-            if (extractedUser.isPresent() && availableUsers.contains(extractedUser)) {
-                User presentUser = extractedUser.get();
-                validatedUsers.add(presentUser);
+            if (extractedUser.isPresent() && availableUsers.contains(extractedUser.get())) {
+                validatedUsers.add(extractedUser.get());
             }
             else if (extractedUser.isPresent()) {
                 absentUser.add(userId);
@@ -197,18 +197,17 @@ public class ProjectService {
             }
         }
 
-        if(!invalidUserIds.isEmpty()) throw new UserNotFoundException("Users with id(s) " + invalidUserIds + "does not exists");
-        if(!absentUser.isEmpty()) throw new UserNotFoundException("Users with id(s) " + invalidUserIds + "does not belong to this project");
+        if(!invalidUserIds.isEmpty()) throw new UserNotFoundException("Users with id(s) " + invalidUserIds + "do not exists");
+        if(!absentUser.isEmpty()) throw new UserAccessDeniedException("Users with id(s) " + absentUser + " do not belong to this project");
 
         Integer currentSize = availableUsers.size();
-        Integer removeSize = 0;
         for (User user: validatedUsers) {
             if (currentSize > 1) {
                 user.removeProject(project);
                 currentSize--;
             }
             else {
-                throw new RuntimeException("All users can't be removed from the project");
+                throw new CannotRemoveAllUsersException("All users can't be removed from the project");
             }
         }
         return projectRepository.save(project);

@@ -29,6 +29,11 @@ public class GlobalExceptionHandler {
         return new ResponseEntity<>("Error: " + ex.getMessage(), HttpStatus.BAD_REQUEST);
     }
 
+    @ExceptionHandler(UserAccessDeniedException.class)
+    public ResponseEntity<String> handleUserAccessDeniedException(UserAccessDeniedException ex) {
+        return new ResponseEntity<>("Error: " + ex.getMessage(), HttpStatus.BAD_REQUEST);
+    }
+
     @ExceptionHandler(UserEmailAlreadyExistsException.class)
     public ResponseEntity<String> handleUserAlreadyExistsException(UserEmailAlreadyExistsException ex) {
         return new ResponseEntity<>("Error: " + ex.getMessage(), HttpStatus.CONFLICT);
@@ -41,6 +46,11 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(InvalidSortDirectionException.class)
     public ResponseEntity<String> handleInvalidSortDirectionException(InvalidSortDirectionException ex) {
+        return new ResponseEntity<>("Error: " + ex.getMessage(), HttpStatus.BAD_REQUEST);
+    }
+
+    @ExceptionHandler(CannotRemoveAllUsersException.class)
+    public ResponseEntity<String> handleCannotRemoveAllUsersException(CannotRemoveAllUsersException ex) {
         return new ResponseEntity<>("Error: " + ex.getMessage(), HttpStatus.BAD_REQUEST);
     }
 

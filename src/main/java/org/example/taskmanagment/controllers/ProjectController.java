@@ -59,12 +59,12 @@ public class ProjectController {
         projectService.deleteProject(id);
     }
 
-    @PostMapping("/{id}/users")
+    @PutMapping("/{id}/users")
     public Project replaceProjectMembers(@PathVariable Long id, @Valid @RequestBody Set<User> user) {
         return projectService.replaceProjectMembers(id, user);
     }
 
-    @PutMapping("/{id}/users")
+    @PostMapping("/{id}/users")
     public Project addProjectMembers(@PathVariable Long id, @Valid @RequestBody Set<User> user) {
         return projectService.addProjectMembers(id, user);
     }
