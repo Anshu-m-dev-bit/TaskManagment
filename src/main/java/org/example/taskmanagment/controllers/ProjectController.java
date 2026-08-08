@@ -1,6 +1,8 @@
 package org.example.taskmanagment.controllers;
 
 import jakarta.validation.Valid;
+import org.example.taskmanagment.dto.project.request.CreateProjectRequest;
+import org.example.taskmanagment.dto.project.request.UpdateProjectRequest;
 import org.example.taskmanagment.entities.Project;
 import org.example.taskmanagment.entities.Task;
 import org.example.taskmanagment.entities.User;
@@ -25,13 +27,13 @@ public class ProjectController {
     }
 
     @PostMapping
-    public Project createProject(@Valid @RequestBody Project project) {
-        return projectService.createProject(project);
+    public Project createProject(@Valid @RequestBody CreateProjectRequest projectDetails) {
+        return projectService.createProject(projectDetails);
     }
 
     @PutMapping("/{id}")
-    public Project updateProject(@PathVariable Long id, @Valid @RequestBody Project project) {
-        return projectService.updateProject(id, project);
+    public Project updateProject(@PathVariable Long id, @Valid @RequestBody UpdateProjectRequest projectDetails) {
+        return projectService.updateProject(id, projectDetails);
     }
 
     @GetMapping("/{id}")

@@ -1,5 +1,7 @@
 package org.example.taskmanagment.services;
 
+import org.example.taskmanagment.dto.project.request.CreateProjectRequest;
+import org.example.taskmanagment.dto.project.request.UpdateProjectRequest;
 import org.example.taskmanagment.entities.Project;
 import org.example.taskmanagment.entities.User;
 import org.example.taskmanagment.exceptions.*;
@@ -24,61 +26,52 @@ public class ProjectService {
     }
     private final static Set<String> allowedSortFields = new HashSet<>(Arrays.asList("id", "name"));
 
-    public Project createProject(Project project) {
-         Set<User> givenUsers= project.getUsers();
-         Set<User> validatedUsers = new HashSet<>();
-         Set<Long> invalidUserIds = new HashSet<>();
-         for (User user: givenUsers) {
-             Long userId = user.getId();
-             Optional<User> extractedUser = userRepository.findById(userId);
-             if (extractedUser.isPresent()) {
-                 User presentUser = extractedUser.get();
-                 validatedUsers.add(presentUser);
-             }
-             else {
-                 invalidUserIds.add(userId);
-             }
-         }
-         if(!invalidUserIds.isEmpty()) throw new UserNotFoundException("Users with id(s) " + invalidUserIds + "does not exists");
-         project.setUsers(validatedUsers);
+    private Set<User> defineUsers(Set<Long> givenUserIds) {
+        Set<User> validatedUsers = new HashSet<>();
+        Set<Long> invalidUserIds = new HashSet<>();
+        for (Long id: givenUserIds) {
+            Optional<User> extractedUser = userRepository.findById(id);
+            if (extractedUser.isPresent()) {
+                User presentUser = extractedUser.get();
+                validatedUsers.add(presentUser);
+            }
+            else {
+                invalidUserIds.add(id);
+            }
+        }
+        if(!invalidUserIds.isEmpty()) throw new UserNotFoundException("Users with id(s) " + invalidUserIds + "does not exists");
 
-         for (User user: validatedUsers) {
-             user.addProject(project);
-         }
-
-         return projectRepository.save(project);
+        return validatedUsers;
     }
 
-    public Project updateProject(Long id, Project project) {
+    public Project createProject(CreateProjectRequest projectDetails) {
+         Project project = new Project();
+        if (projectDetails.getName() == null || projectDetails.getName().isBlank()) {
+            throw new RuntimeException("Please provide a valid name for the project");
+        }
+
+        if (projectDetails.getDescription() == null || projectDetails.getDescription().isBlank()) {
+            throw new RuntimeException("Please provide a valid description for the project");
+        }
+
+        Set<User> users = defineUsers(projectDetails.getUserIds());
+        project.setName(projectDetails.getName());
+        project.setDescription(projectDetails.getDescription());
+        project.setUsers(users);
+
+        return projectRepository.save(project);
+    }
+
+    public Project updateProject(Long id, UpdateProjectRequest projectDetails) {
         Project existingProject = projectRepository.findById(id)
                 .orElseThrow(() -> new ProjectNotFoundException("Project with id " + id + " not found"));
 
-        Set<User> givenUsers= project.getUsers();
-        Set<User> validatedUsers = new HashSet<>();
-        Set<Long> invalidUserIds = new HashSet<>();
-         for (User user: givenUsers) {
-             Long userId = user.getId();
-             Optional<User> extractedUser = userRepository.findById(userId);
-             if (extractedUser.isPresent()) {
-                 User presentUser = extractedUser.get();
-                 validatedUsers.add(presentUser);
-             }
-             else {
-                 invalidUserIds.add(userId);
-             }
-         }
-
-         if(!invalidUserIds.isEmpty()) throw new UserNotFoundException("Users with id(s) " + invalidUserIds + "does not exists");
-         project.setUsers(validatedUsers);
-
-         for (User user: validatedUsers) {
-            user.addProject(existingProject);
-         }
-
-         existingProject.setName(project.getName());
-         existingProject.setDescription(project.getDescription());
-         existingProject.setUsers(project.getUsers());
-
+        if (projectDetails.getName() != null && !projectDetails.getName().isBlank()) {
+         existingProject.setName(projectDetails.getName());
+        }
+        if (projectDetails.getDescription() != null && !projectDetails.getDescription().isBlank()) {
+         existingProject.setDescription(projectDetails.getDescription());
+        }
          return projectRepository.save(existingProject);
     }
 
