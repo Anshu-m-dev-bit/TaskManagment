@@ -1,7 +1,6 @@
 package org.example.taskmanagment.services;
 
-import org.example.taskmanagment.dto.project.request.CreateProjectRequest;
-import org.example.taskmanagment.dto.project.request.UpdateProjectRequest;
+import org.example.taskmanagment.dto.project.request.*;
 import org.example.taskmanagment.entities.Project;
 import org.example.taskmanagment.entities.User;
 import org.example.taskmanagment.exceptions.*;
@@ -45,14 +44,7 @@ public class ProjectService {
     }
 
     public Project createProject(CreateProjectRequest projectDetails) {
-         Project project = new Project();
-        if (projectDetails.getName() == null || projectDetails.getName().isBlank()) {
-            throw new RuntimeException("Please provide a valid name for the project");
-        }
-
-        if (projectDetails.getDescription() == null || projectDetails.getDescription().isBlank()) {
-            throw new RuntimeException("Please provide a valid description for the project");
-        }
+        Project project = new Project();
 
         Set<User> users = defineUsers(projectDetails.getUserIds());
         project.setName(projectDetails.getName());
@@ -108,27 +100,12 @@ public class ProjectService {
         projectRepository.deleteById(id);
     }
 
-    public Project replaceProjectMembers(Long id, Set<User> givenUsers) {
+    public Project replaceProjectMembers(Long id, ReplaceProjectMembersRequest projectDetails) {
         Project project = projectRepository.findById(id)
                 .orElseThrow(() -> new ProjectNotFoundException("Project with id " + id + " not found"));
 
         Set<User> availableUsers = new HashSet<>(project.getUsers());
-        Set<User> validatedUsers = new HashSet<>();
-        Set<Long> invalidUserIds = new HashSet<>();
-        for (User user: givenUsers) {
-            Long userId = user.getId();
-            Optional<User> extractedUser = userRepository.findById(userId);
-            if (extractedUser.isPresent()) {
-                User presentUser = extractedUser.get();
-                validatedUsers.add(presentUser);
-            }
-            else {
-                invalidUserIds.add(userId);
-            }
-        }
-
-        if(!invalidUserIds.isEmpty()) throw new UserNotFoundException("Users with id(s) " + invalidUserIds + " do not exists");
-
+        Set<User> validatedUsers = defineUsers(projectDetails.getUserIds());
         for (User user: availableUsers) {
             user.removeProject(project);
         }
@@ -140,26 +117,11 @@ public class ProjectService {
         return projectRepository.save(project);
     }
 
-    public Project addProjectMembers(Long id, Set<User> givenUsers) {
+    public Project addProjectMembers(Long id, AddProjectMembersRequest projectDetails) {
         Project project = projectRepository.findById(id)
                 .orElseThrow(() -> new ProjectNotFoundException("Project with id " + id + " not found"));
 
-        Set<User> validatedUsers = new HashSet<>();
-        Set<Long> invalidUserIds = new HashSet<>();
-        for (User user: givenUsers) {
-            Long userId = user.getId();
-            Optional<User> extractedUser = userRepository.findById(userId);
-            if (extractedUser.isPresent()) {
-                User presentUser = extractedUser.get();
-                validatedUsers.add(presentUser);
-            }
-            else {
-                invalidUserIds.add(userId);
-            }
-        }
-
-        if(!invalidUserIds.isEmpty()) throw new UserNotFoundException("Users with id(s) " + invalidUserIds + "does not exists");
-
+        Set<User> validatedUsers = defineUsers(projectDetails.getUserIds());
         for (User user: validatedUsers) {
             user.addProject(project);
         }
@@ -167,30 +129,20 @@ public class ProjectService {
         return projectRepository.save(project);
     }
 
-    public Project removeProjectMembers(Long id, Set<User> givenUsers) {
+    public Project removeProjectMembers(Long id, RemoveProjectMembersRequest projectDetails) {
         Project project = projectRepository.findById(id)
                 .orElseThrow(() -> new ProjectNotFoundException("Project with id " + id + " not found"));
 
         Set<User> availableUsers = project.getUsers();
-        Set<User> validatedUsers = new HashSet<>();
+        Set<User> validatedUsers = defineUsers(projectDetails.getUserIds());
         Set<Long> absentUser = new HashSet<>();
-        Set<Long> invalidUserIds = new HashSet<>();
 
-        for (User user: givenUsers) {
-            Long userId = user.getId();
-            Optional<User> extractedUser = userRepository.findById(userId);
-            if (extractedUser.isPresent() && availableUsers.contains(extractedUser.get())) {
-                validatedUsers.add(extractedUser.get());
-            }
-            else if (extractedUser.isPresent()) {
-                absentUser.add(userId);
-            }
-            else {
-                invalidUserIds.add(userId);
+        for (User user: validatedUsers) {
+            if(!availableUsers.contains(user)) {
+                absentUser.add(user.getId());
             }
         }
 
-        if(!invalidUserIds.isEmpty()) throw new UserNotFoundException("Users with id(s) " + invalidUserIds + "do not exists");
         if(!absentUser.isEmpty()) throw new UserAccessDeniedException("Users with id(s) " + absentUser + " do not belong to this project");
 
         Integer currentSize = availableUsers.size();

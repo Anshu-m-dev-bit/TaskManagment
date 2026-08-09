@@ -1,8 +1,7 @@
 package org.example.taskmanagment.controllers;
 
 import jakarta.validation.Valid;
-import org.example.taskmanagment.dto.project.request.CreateProjectRequest;
-import org.example.taskmanagment.dto.project.request.UpdateProjectRequest;
+import org.example.taskmanagment.dto.project.request.*;
 import org.example.taskmanagment.entities.Project;
 import org.example.taskmanagment.entities.Task;
 import org.example.taskmanagment.entities.User;
@@ -62,17 +61,17 @@ public class ProjectController {
     }
 
     @PutMapping("/{id}/users")
-    public Project replaceProjectMembers(@PathVariable Long id, @Valid @RequestBody Set<User> user) {
-        return projectService.replaceProjectMembers(id, user);
+    public Project replaceProjectMembers(@PathVariable Long id, @Valid @RequestBody ReplaceProjectMembersRequest projectDetails) {
+        return projectService.replaceProjectMembers(id, projectDetails);
     }
 
     @PostMapping("/{id}/users")
-    public Project addProjectMembers(@PathVariable Long id, @Valid @RequestBody Set<User> user) {
-        return projectService.addProjectMembers(id, user);
+    public Project addProjectMembers(@PathVariable Long id, @Valid @RequestBody AddProjectMembersRequest projectDetails) {
+        return projectService.addProjectMembers(id, projectDetails);
     }
 
     @DeleteMapping("/{id}/users")
-    public Project removeProjectMembers(@PathVariable Long id, @Valid @RequestBody Set<User> user) {
-        return projectService.removeProjectMembers(id, user);
+    public Project removeProjectMembers(@PathVariable Long id, @Valid @RequestBody RemoveProjectMembersRequest projectDetails) {
+        return projectService.removeProjectMembers(id, projectDetails);
     }
 }
