@@ -2,6 +2,8 @@ package org.example.taskmanagment.controllers;
 
 import jakarta.validation.Valid;
 import org.example.taskmanagment.dto.project.request.*;
+import org.example.taskmanagment.dto.project.response.ProjectResponse;
+import org.example.taskmanagment.dto.project.response.ProjectUserResponse;
 import org.example.taskmanagment.entities.Project;
 import org.example.taskmanagment.entities.Task;
 import org.example.taskmanagment.entities.User;
@@ -11,8 +13,10 @@ import org.springframework.data.domain.Page;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.stereotype.Controller;
 
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.function.Function;
 
 
 @RestController
@@ -36,8 +40,23 @@ public class ProjectController {
     }
 
     @GetMapping("/{id}")
-    public Project getProject(@PathVariable Long id) {
-        return projectService.getProject(id);
+    public ProjectResponse getProject(@PathVariable Long id) {
+        Project project = projectService.getProject(id);
+        ProjectResponse projectResponse = new ProjectResponse();
+        projectResponse.setProjectId(id);
+        projectResponse.setName(project.getName());
+        projectResponse.setDescription(project.getDescription());
+        Set<User> users = project.getUsers();
+        System.out.println(users.size());
+        Set<ProjectUserResponse> projectUserResponse = new HashSet<>();
+        for (User user: users) {
+            ProjectUserResponse userResponse = new ProjectUserResponse();
+            userResponse.setUserId(user.getId());
+            userResponse.setName(user.getName());
+            projectUserResponse.add(userResponse);
+        }
+        projectResponse.setProjectUserResponse(projectUserResponse);
+        return projectResponse;
     }
 
     @GetMapping("/{id}/tasks")
@@ -48,11 +67,30 @@ public class ProjectController {
     }
 
     @GetMapping
-    public Page<Project> getAllProjects(@RequestParam (required = false) Integer page,
+    public Page<ProjectResponse> getAllProjects(@RequestParam (required = false) Integer page,
                                         @RequestParam (required = false) Integer size,
                                         @RequestParam (required = false) String sortField,
                                         @RequestParam (required = false) String sortDirection) {
-        return projectService.getAllProjects(page, size, sortField, sortDirection);
+
+        Page<Project> project =  projectService.getAllProjects(page, size, sortField, sortDirection);
+        return project.map(
+                project1 -> {
+                    ProjectResponse projectResponse = new ProjectResponse();
+                    projectResponse.setProjectId(project1.getId());
+                    projectResponse.setName(project1.getName());
+                    projectResponse.setDescription(project1.getDescription());
+                    Set<User> users = project1.getUsers();
+                    Set<ProjectUserResponse> projectUserResponses= new HashSet<>();
+                    for (User user: users) {
+                        ProjectUserResponse userResponse = new ProjectUserResponse();
+                        userResponse.setUserId(user.getId());
+                        userResponse.setName(user.getName());
+                        projectUserResponses.add(userResponse);
+                    }
+                    projectResponse.setProjectUserResponse(projectUserResponses);
+                    return projectResponse;
+                }
+        );
     }
 
     @DeleteMapping("/{id}")

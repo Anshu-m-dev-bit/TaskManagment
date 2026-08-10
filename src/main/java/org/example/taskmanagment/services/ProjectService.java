@@ -49,7 +49,9 @@ public class ProjectService {
         Set<User> users = defineUsers(projectDetails.getUserIds());
         project.setName(projectDetails.getName());
         project.setDescription(projectDetails.getDescription());
-        project.setUsers(users);
+        for (User user: users) {
+            user.addProject(project);
+        }
 
         return projectRepository.save(project);
     }
