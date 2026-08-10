@@ -1,6 +1,7 @@
 package org.example.taskmanagment.controllers;
 
 import jakarta.validation.Valid;
+import org.example.taskmanagment.dto.project.ProjectMapper;
 import org.example.taskmanagment.dto.project.request.*;
 import org.example.taskmanagment.dto.project.response.ProjectResponse;
 import org.example.taskmanagment.dto.project.response.ProjectUserResponse;
@@ -24,39 +25,27 @@ import java.util.function.Function;
 public class ProjectController {
     private final ProjectService projectService;
     private final TaskService taskService;
-    public ProjectController(ProjectService projectService, TaskService taskService) {
+    private final ProjectMapper projectMapper;
+    public ProjectController(ProjectService projectService, TaskService taskService, ProjectMapper projectMapper) {
         this.taskService = taskService;
         this.projectService = projectService;
+        this.projectMapper = projectMapper;
     }
 
     @PostMapping
-    public Project createProject(@Valid @RequestBody CreateProjectRequest projectDetails) {
-        return projectService.createProject(projectDetails);
+    public ProjectResponse createProject(@Valid @RequestBody CreateProjectRequest projectDetails) {
+        return projectMapper.toProjectResponse(projectService.createProject(projectDetails));
     }
 
     @PutMapping("/{id}")
-    public Project updateProject(@PathVariable Long id, @Valid @RequestBody UpdateProjectRequest projectDetails) {
-        return projectService.updateProject(id, projectDetails);
+    public ProjectResponse updateProject(@PathVariable Long id, @Valid @RequestBody UpdateProjectRequest projectDetails) {
+        return projectMapper.toProjectResponse(projectService.updateProject(id, projectDetails));
     }
 
     @GetMapping("/{id}")
     public ProjectResponse getProject(@PathVariable Long id) {
         Project project = projectService.getProject(id);
-        ProjectResponse projectResponse = new ProjectResponse();
-        projectResponse.setProjectId(id);
-        projectResponse.setName(project.getName());
-        projectResponse.setDescription(project.getDescription());
-        Set<User> users = project.getUsers();
-        System.out.println(users.size());
-        Set<ProjectUserResponse> projectUserResponse = new HashSet<>();
-        for (User user: users) {
-            ProjectUserResponse userResponse = new ProjectUserResponse();
-            userResponse.setUserId(user.getId());
-            userResponse.setName(user.getName());
-            projectUserResponse.add(userResponse);
-        }
-        projectResponse.setProjectUserResponse(projectUserResponse);
-        return projectResponse;
+        return projectMapper.toProjectResponse(project);
     }
 
     @GetMapping("/{id}/tasks")
@@ -74,22 +63,7 @@ public class ProjectController {
 
         Page<Project> project =  projectService.getAllProjects(page, size, sortField, sortDirection);
         return project.map(
-                project1 -> {
-                    ProjectResponse projectResponse = new ProjectResponse();
-                    projectResponse.setProjectId(project1.getId());
-                    projectResponse.setName(project1.getName());
-                    projectResponse.setDescription(project1.getDescription());
-                    Set<User> users = project1.getUsers();
-                    Set<ProjectUserResponse> projectUserResponses= new HashSet<>();
-                    for (User user: users) {
-                        ProjectUserResponse userResponse = new ProjectUserResponse();
-                        userResponse.setUserId(user.getId());
-                        userResponse.setName(user.getName());
-                        projectUserResponses.add(userResponse);
-                    }
-                    projectResponse.setProjectUserResponse(projectUserResponses);
-                    return projectResponse;
-                }
+                projectMapper::toProjectResponse
         );
     }
 
@@ -99,17 +73,17 @@ public class ProjectController {
     }
 
     @PutMapping("/{id}/users")
-    public Project replaceProjectMembers(@PathVariable Long id, @Valid @RequestBody ReplaceProjectMembersRequest projectDetails) {
-        return projectService.replaceProjectMembers(id, projectDetails);
+    public ProjectResponse replaceProjectMembers(@PathVariable Long id, @Valid @RequestBody ReplaceProjectMembersRequest projectDetails) {
+        return projectMapper.toProjectResponse(projectService.replaceProjectMembers(id, projectDetails));
     }
 
     @PostMapping("/{id}/users")
-    public Project addProjectMembers(@PathVariable Long id, @Valid @RequestBody AddProjectMembersRequest projectDetails) {
-        return projectService.addProjectMembers(id, projectDetails);
+    public ProjectResponse addProjectMembers(@PathVariable Long id, @Valid @RequestBody AddProjectMembersRequest projectDetails) {
+        return projectMapper.toProjectResponse(projectService.addProjectMembers(id, projectDetails));
     }
 
     @DeleteMapping("/{id}/users")
-    public Project removeProjectMembers(@PathVariable Long id, @Valid @RequestBody RemoveProjectMembersRequest projectDetails) {
-        return projectService.removeProjectMembers(id, projectDetails);
+    public ProjectResponse removeProjectMembers(@PathVariable Long id, @Valid @RequestBody RemoveProjectMembersRequest projectDetails) {
+        return projectMapper.toProjectResponse(projectService.removeProjectMembers(id, projectDetails));
     }
 }
