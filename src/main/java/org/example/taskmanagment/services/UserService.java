@@ -1,5 +1,7 @@
 package org.example.taskmanagment.services;
 
+import org.example.taskmanagment.dto.user.request.CreateUserRequest;
+import org.example.taskmanagment.dto.user.request.UpdateUserRequest;
 import org.example.taskmanagment.entities.User;
 import org.example.taskmanagment.exceptions.InvalidSortDirectionException;
 import org.example.taskmanagment.exceptions.InvalidSortFieldException;
@@ -20,26 +22,40 @@ import java.util.Set;
 @Service
 public class UserService {
     private final UserRepository userRepository;
+    private final static Set<String> allowedSortFields = new HashSet<>(Arrays.asList("id", "name"));
+
     public UserService(UserRepository userRepository) {
         this.userRepository = userRepository;
     }
-    public User createUser(User user) {
-        if(userRepository.existsByEmail(user.getEmail()))
-            throw new UserEmailAlreadyExistsException("User email: " + user.getEmail() + " already exists");
 
+    public User createUser(CreateUserRequest userDetails) {
+        if(userRepository.existsByEmail(userDetails.getEmailID()))
+            throw new UserEmailAlreadyExistsException("User email: " + userDetails.getEmailID() + " already exists");
+
+        User user = new User();
+        user.setName(userDetails.getName());
+        user.setEmail(userDetails.getEmailID());
+        user.setPassword(userDetails.getPassword());
         return userRepository.save(user);
     }
 
-    private final static Set<String> allowedSortFields = new HashSet<>(Arrays.asList("id", "name"));
-    public User updateUser(Long id, User user) {
+    public User updateUser(Long id, UpdateUserRequest userDetails) {
         User existingUser = userRepository.findById(id)
                 .orElseThrow(() -> new UserNotFoundException("User with id " + id + " not found"));
 
-        if(userRepository.existsByEmail(user.getEmail()))
-            throw new UserEmailAlreadyExistsException("User email: " + user.getEmail() + "already exists");
+        if(userRepository.existsByEmail(userDetails.getEmailID()))
+            throw new UserEmailAlreadyExistsException("User email: " + userDetails.getEmailID() + "already exists");
 
-        existingUser.setName(user.getName());
-        existingUser.setEmail(user.getEmail());
+        if (userDetails.getName() != null && !userDetails.getName().isBlank()) {
+            existingUser.setName(userDetails.getName());
+        }
+        if (userDetails.getEmailID() != null && !userDetails.getEmailID().isBlank()) {
+            existingUser.setEmail(userDetails.getEmailID());
+        }
+        if (userDetails.getPassword() != null && !userDetails.getPassword().isBlank()) {
+            existingUser.setEmail(userDetails.getEmailID());
+        }
+
         return userRepository.save(existingUser);
     }
 
