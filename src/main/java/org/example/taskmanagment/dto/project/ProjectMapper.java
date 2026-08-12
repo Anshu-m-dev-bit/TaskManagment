@@ -16,10 +16,10 @@ public class ProjectMapper {
         projectResponse.setProjectId(project.getId());
         projectResponse.setName(project.getName());
         projectResponse.setDescription(project.getDescription());
-        projectResponse.setProjectUserResponse(toProjectUserResponse(project.getUsers()));
+        projectResponse.setProjectUserResponse(toProjectUsersResponse(project.getUsers()));
         return projectResponse;
     }
-    public Set<ProjectUserResponse> toProjectUserResponse(Set<User> users) {
+    public Set<ProjectUserResponse> toProjectUsersResponse(Set<User> users) {
         Set<ProjectUserResponse> projectUserResponses = new HashSet<>();
         for (User user: users) {
             ProjectUserResponse userResponse = new ProjectUserResponse();

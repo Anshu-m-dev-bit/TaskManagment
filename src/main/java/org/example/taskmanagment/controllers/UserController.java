@@ -1,6 +1,9 @@
 package org.example.taskmanagment.controllers;
 
 import jakarta.validation.Valid;
+import org.example.taskmanagment.dto.project.ProjectMapper;
+import org.example.taskmanagment.dto.project.response.ProjectResponse;
+import org.example.taskmanagment.dto.user.UserMapper;
 import org.example.taskmanagment.dto.user.request.CreateUserRequest;
 import org.example.taskmanagment.dto.user.request.UpdateUserRequest;
 import org.example.taskmanagment.dto.user.response.UserProjectResponse;
@@ -28,39 +31,30 @@ public class UserController {
     private final UserService userService;
     private final ProjectService projectService;
     private final TaskService taskService;
-    public UserController(UserService userService, ProjectService projectService, TaskService taskService) {
+    private final UserMapper userMapper;
+    private final ProjectMapper projectMapper;
+    public UserController(UserService userService, ProjectService projectService,
+                          TaskService taskService, UserMapper userMapper, ProjectMapper projectMapper) {
         this.userService = userService;
         this.projectService = projectService;
         this.taskService = taskService;
+        this.userMapper = userMapper;
+        this.projectMapper = projectMapper;
     }
 
     @PostMapping
-    public User createUser(@Valid @RequestBody CreateUserRequest userDetails) {
-        return userService.createUser(userDetails);
+    public UserResponse createUser(@Valid @RequestBody CreateUserRequest userDetails) {
+        return userMapper.toUserResponse(userService.createUser(userDetails));
     }
 
     @PutMapping("/{id}")
-    public User updateUser(@PathVariable Long id, @Valid @RequestBody UpdateUserRequest userDetails) {
-        return userService.updateUser(id, userDetails);
+    public UserResponse updateUser(@PathVariable Long id, @Valid @RequestBody UpdateUserRequest userDetails) {
+        return userMapper.toUserResponse(userService.updateUser(id, userDetails));
     }
 
     @GetMapping("/{id}")
     public UserResponse getUser(@PathVariable Long id) {
-        User user = userService.getUser(id);
-        UserResponse userResponse = new UserResponse();
-        userResponse.setUserId(user.getId());
-        userResponse.setName(user.getName());
-        userResponse.setEmailID(user.getEmail());
-        Set<Project> projects = user.getProjects();
-        Set<UserProjectResponse> userProjectResponses = new HashSet<>();
-        for (Project project: projects) {
-            UserProjectResponse userProjectResponse = new UserProjectResponse();
-            userProjectResponse.setProjectId(project.getId());
-            userProjectResponse.setProjectName(project.getName());
-            userProjectResponses.add(userProjectResponse);
-        }
-        userResponse.setUserProjectResponses(userProjectResponses);
-        return userResponse;
+        return userMapper.toUserResponse(userService.getUser(id));
     }
 
     @GetMapping
@@ -70,29 +64,21 @@ public class UserController {
                                   @RequestParam (required = false) String sortDirection) {
         Page<User> users = userService.getAllUsers(page, size, sortField, sortDirection);
         return users.map(
-                user1 -> {
-                    UserResponse userResponse = new UserResponse();
-                    userResponse.setUserId(user1.getId());
-                    userResponse.setName(user1.getName());
-                    userResponse.setEmailID(user1.getEmail());
-                    Set<Project> projects = user1.getProjects();
-                    Set<UserProjectResponse> userProjectResponses = new HashSet<>();
-                    for (Project project: projects) {
-                        UserProjectResponse userProjectResponse = new UserProjectResponse();
-                        userProjectResponse.setProjectId(project.getId());
-                        userProjectResponse.setProjectName(project.getName());
-                        userProjectResponses.add(userProjectResponse);
-                    }
-                    userResponse.setUserProjectResponses(userProjectResponses);
-                    return userResponse;
-                }
+                userMapper::toUserResponse
         );
 
     }
 
     @GetMapping("/{id}/projects")
-    public List<Project> getProjectsByUserId(@PathVariable Long id) {
-        return projectService.getProjectsByUserId(id);
+    public Page<ProjectResponse> getProjectsByUserId(@PathVariable Long id,
+                                                     @RequestParam (required = false) Integer page,
+                                                     @RequestParam (required = false) Integer size,
+                                                     @RequestParam (required = false) String sortField,
+                                                     @RequestParam (required = false) String sortDirection) {
+        Page<Project> project = projectService.getProjectsByUserId(id, page, size, sortField, sortDirection);
+        return project.map(
+                projectMapper::toProjectResponse
+        );
     }
 
     @GetMapping("/{id}/tasks")

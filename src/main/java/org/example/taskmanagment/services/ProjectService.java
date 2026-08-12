@@ -74,11 +74,22 @@ public class ProjectService {
                 .orElseThrow(() -> new ProjectNotFoundException("Project with id " + id + " not found"));
     }
 
-    public List<Project> getProjectsByUserId(Long id) {
+    public Page<Project> getProjectsByUserId(Long id, Integer page, Integer size,
+                                             String sortField, String sortDirection) {
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new UserNotFoundException("User with id " + id + " not found"));
+        page = page == null ? 0 : page;
+        size = size == null ? 10 : size;
+        sortField = sortField == null ? "id" : sortField;
+        String direction = sortDirection == null ? "asc" : sortDirection;
 
-        return projectRepository.findAllByUsersId(id);
+        if(!allowedSortFields.contains(sortField)) throw new InvalidSortFieldException("Invalid sort field: " + sortField);
+        Sort sort = Sort.by(Sort.Direction.fromOptionalString(direction)
+                        .orElseThrow(() -> new InvalidSortDirectionException("Invalid sort direction " + direction)),
+                sortField);
+        PageRequest pageRequest = PageRequest.of(page, size, sort);
+
+        return projectRepository.findAllByUsersId(id, pageRequest);
     }
 
     public Page<Project> getAllProjects(Integer page, Integer size, String sortField, String sortDirection) {
