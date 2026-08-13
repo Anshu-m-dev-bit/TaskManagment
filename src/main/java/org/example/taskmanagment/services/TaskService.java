@@ -1,5 +1,7 @@
 package org.example.taskmanagment.services;
 
+import org.example.taskmanagment.dto.task.request.CreateTaskRequest;
+import org.example.taskmanagment.dto.task.request.UpdateTaskRequest;
 import org.example.taskmanagment.entities.Project;
 import org.example.taskmanagment.entities.Task;
 import org.example.taskmanagment.entities.User;
@@ -12,6 +14,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
 import java.util.*;
 
 @Service
@@ -28,9 +31,11 @@ public class TaskService {
 
     private static final Set<String> allowedSortFields = new HashSet<>(Arrays.asList("id", "title", "createdAt", "dueDate", "priority"));
 
-    public Task createTask(Task task) {
-        Long userId = task.getUser().getId();
-        Long projectId = task.getProject().getId();
+    public Task createTask(CreateTaskRequest taskDetails) {
+        Long userId = taskDetails.getUserId();
+        Long projectId = taskDetails.getProjectId();
+
+        Task task = new Task();
 
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new UserNotFoundException("User with id " + userId + " not found"));
@@ -45,37 +50,80 @@ public class TaskService {
                 .noneMatch(eachUser -> eachUser.getId().equals(user.getId())))
                 throw new ProjectAccessDeniedException("Project " + projectId + " does not belong to the User " + userId);
 
+        if (LocalDate.now().isAfter(taskDetails.getDueDate())) {
+            throw new ProjectAccessDeniedException("Task's due date cannot be before the created time ");
+        }
+        task.setTitle(taskDetails.getTitle());
+        task.setDescription(taskDetails.getDescription());
+        if(taskDetails.getStatus() != null) task.setStatus(taskDetails.getStatus());
+        task.setPriority(taskDetails.getPriority());
+        task.setDueDate(taskDetails.getDueDate());
+
         return taskRepository.save(task);
     }
 
-    public Task updateTask(Long id, Task task) {
+    public Task updateTask(Long id, UpdateTaskRequest taskDetails) {
         Task existingTask = taskRepository.findById(id)
                 .orElseThrow(() -> new TaskNotFoundException("Task with id " + id + " not found"));
 
-        Long userId = task.getUser().getId();
-        Long projectId = task.getProject().getId();
 
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new UserNotFoundException("User with id " + userId + " not found"));
-        task.setUser(user);
+        Long userId = taskDetails.getUserId();
+        Long projectId = taskDetails.getProjectId();
 
-        Project project = projectRepository.findById(projectId)
-                .orElseThrow(() -> new ProjectNotFoundException("Project with id " + projectId + " not found"));
-        task.setProject(project);
+        User userToUse = existingTask.getUser();
+        Project projectToUse = existingTask.getProject();
+        LocalDate dueDateToUse = existingTask.getDueDate();
+        Project project = projectId != null ? projectRepository.findById(projectId)
+                .orElseThrow(() -> new ProjectNotFoundException("Project with id " + projectId + " not found")) : null;
 
-        Set<User> givenUsers= project.getUsers();
-        if(givenUsers.stream()
-                .noneMatch(eachUser -> eachUser.getId().equals(user.getId()))) {
+        User user = userId != null ? userRepository.findById(userId)
+                .orElseThrow(() -> new UserNotFoundException("User with id " + userId + " not found")) : null;
+
+        if (project != null && user != null) {
+            Set<User> givenUsers= project.getUsers();
+            if(givenUsers.stream()
+                    .noneMatch(eachUser -> eachUser.getId().equals(user.getId())))
                 throw new ProjectAccessDeniedException("Project " + projectId + " does not belong to the User " + userId);
+            userToUse = user;
+            projectToUse = project;
+
+        } else if (project == null && user != null) {
+            Set<User> givenUsers = existingTask.getProject().getUsers();
+            if(givenUsers.stream().
+                    noneMatch(eachUser -> eachUser.getId().equals(user.getId())))
+                throw new ProjectAccessDeniedException("Project " + existingTask.getProject().getId() + " do not belong to the User " + userId);
+            userToUse = user;
+
+        } else if (project != null && user == null) {
+            Set<User> givenUsers = project.getUsers();
+            if(givenUsers.stream().
+                    noneMatch(eachUser -> eachUser.getId().equals(existingTask.getUser().getId())))
+                throw new ProjectAccessDeniedException("Project " + projectId + " do not belong to the User " + existingTask.getUser().getId());
+            projectToUse = project;
         }
 
-        existingTask.setTitle(task.getTitle());
-        existingTask.setDescription(task.getDescription());
-        existingTask.setDueDate(task.getDueDate());
-        existingTask.setStatus(task.getStatus());
-        existingTask.setPriority(task.getPriority());
-        existingTask.setProject(task.getProject());
-        existingTask.setUser(task.getUser());
+        if (taskDetails.getDueDate() != null) {
+            if (existingTask.getCreatedAt().isAfter(taskDetails.getDueDate())) {
+                throw new ProjectAccessDeniedException("Task's due date cannot be before the created time ");
+            }
+            dueDateToUse = taskDetails.getDueDate();
+        }
+
+        if (taskDetails.getTitle() != null && !taskDetails.getTitle().isBlank())
+            existingTask.setTitle(taskDetails.getTitle());
+
+        if (taskDetails.getDescription() != null && !taskDetails.getDescription().isBlank())
+            existingTask.setDescription(taskDetails.getDescription());
+
+        if (taskDetails.getStatus() != null) existingTask.setStatus(taskDetails.getStatus());
+
+        if (taskDetails.getPriority() != null) existingTask.setPriority(taskDetails.getPriority());
+
+        existingTask.setUser(userToUse);
+        existingTask.setProject(projectToUse);
+        existingTask.setDueDate(dueDateToUse);
+
+
         return taskRepository.save(existingTask);
 
     }

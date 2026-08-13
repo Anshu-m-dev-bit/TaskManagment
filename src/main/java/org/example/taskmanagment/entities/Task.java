@@ -24,9 +24,8 @@ public class Task {
     @NotNull
     @Column(nullable = false)
     @Enumerated(EnumType.STRING)
-    private CurrStatus status;
+    private CurrStatus status = CurrStatus.TODO;
 
-    @NotNull
     @Column(nullable = false)
     @Enumerated(EnumType.STRING)
     private CurrPriority priority;
