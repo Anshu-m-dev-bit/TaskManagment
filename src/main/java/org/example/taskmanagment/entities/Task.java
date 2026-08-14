@@ -26,7 +26,6 @@ public class Task {
     @Enumerated(EnumType.STRING)
     private CurrStatus status = CurrStatus.TODO;
 
-    @Column(nullable = false)
     @Enumerated(EnumType.STRING)
     private CurrPriority priority;
 
