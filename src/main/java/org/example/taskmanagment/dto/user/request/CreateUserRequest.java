@@ -4,6 +4,7 @@ import jakarta.validation.constraints.NotBlank;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.example.taskmanagment.entities.User;
 
 import java.util.Set;
 
@@ -19,4 +20,6 @@ public class CreateUserRequest {
 
     @NotBlank
     String password;
+
+    User.Role role;
 }

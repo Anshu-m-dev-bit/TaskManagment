@@ -11,6 +11,7 @@ import org.example.taskmanagment.repositories.UserRepository;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import javax.sound.midi.MidiDevice;
@@ -22,10 +23,12 @@ import java.util.Set;
 @Service
 public class UserService {
     private final UserRepository userRepository;
+    private final PasswordEncoder passwordEncoder;
     private final static Set<String> allowedSortFields = new HashSet<>(Arrays.asList("id", "name"));
 
-    public UserService(UserRepository userRepository) {
+    public UserService(UserRepository userRepository, PasswordEncoder passwordEncoder) {
         this.userRepository = userRepository;
+        this.passwordEncoder = passwordEncoder;
     }
 
     public User createUser(CreateUserRequest userDetails) {
@@ -35,7 +38,8 @@ public class UserService {
         User user = new User();
         user.setName(userDetails.getName());
         user.setEmail(userDetails.getEmailID());
-        user.setPassword(userDetails.getPassword());
+        user.setPassword(passwordEncoder.encode(userDetails.getPassword()));
+        user.setRole(userDetails.getRole());
         return userRepository.save(user);
     }
 
@@ -53,7 +57,11 @@ public class UserService {
             existingUser.setEmail(userDetails.getEmailID());
         }
         if (userDetails.getPassword() != null && !userDetails.getPassword().isBlank()) {
-            existingUser.setEmail(userDetails.getEmailID());
+            existingUser.setPassword(passwordEncoder.encode(userDetails.getPassword()));;
+        }
+
+        if (userDetails.getRole() != null) {
+            existingUser.setRole(userDetails.getRole());
         }
 
         return userRepository.save(existingUser);

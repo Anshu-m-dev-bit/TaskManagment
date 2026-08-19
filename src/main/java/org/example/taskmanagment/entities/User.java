@@ -29,6 +29,10 @@ public class User {
     @NotBlank(message = "Password is required")
     private String password;
 
+    @Column(nullable = false)
+    @Enumerated(EnumType.STRING)
+    private Role role = Role.USER;
+
     @JsonIgnore
     @ManyToMany
     @JoinTable(
@@ -41,6 +45,11 @@ public class User {
     @JsonIgnore
     @OneToMany(mappedBy = "user")
     private List<Task> tasks;
+
+    public enum Role {
+        USER,
+        ADMIN
+    }
 
     public Long getId() {
         return id;
@@ -100,5 +109,13 @@ public class User {
 
     public void setTasks(List<Task> tasks) {
         this.tasks = tasks;
+    }
+
+    public void setRole(User.Role role) {
+        this.role = role;
+    }
+
+    public User.Role getRole() {
+        return this.role;
     }
 }
