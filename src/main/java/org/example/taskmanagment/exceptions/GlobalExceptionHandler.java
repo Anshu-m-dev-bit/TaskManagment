@@ -56,6 +56,11 @@ public class GlobalExceptionHandler {
         return buildErrorResponse(HttpStatus.BAD_REQUEST, ex.getMessage());
     }
 
+    @ExceptionHandler(InvalidCredentialsException.class)
+    public ResponseEntity<ErrorResponse> handleInvalidCredentialsException(InvalidCredentialsException ex) {
+        return buildErrorResponse(HttpStatus.UNAUTHORIZED, ex.getMessage());
+    }
+
     @ExceptionHandler(CannotRemoveAllUsersException.class)
     public ResponseEntity<ErrorResponse> handleCannotRemoveAllUsersException(CannotRemoveAllUsersException ex) {
         return buildErrorResponse(HttpStatus.BAD_REQUEST, ex.getMessage());
