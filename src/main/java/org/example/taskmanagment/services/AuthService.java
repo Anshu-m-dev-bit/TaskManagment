@@ -12,17 +12,20 @@ import org.springframework.stereotype.Service;
 @Service
 public class AuthService {
     private final AuthenticationManager authenticationManager;
+    private final JwtService jwtService;
 
 
-    public AuthService(AuthenticationManager authenticationManager) {
+    public AuthService(AuthenticationManager authenticationManager, JwtService jwtService) {
         this.authenticationManager = authenticationManager;
+        this.jwtService = jwtService;
     }
 
-    public Authentication loginUser(LoginRequest loginDetails) {
+    public String loginUser(LoginRequest loginDetails) {
         try {
-        return authenticationManager.
+        Authentication authentication =  authenticationManager.
                 authenticate(new UsernamePasswordAuthenticationToken(loginDetails.getEmail(),
                         loginDetails.getPassword()));
+        return jwtService.createToken(authentication);
         } catch (BadCredentialsException e) {
             throw new InvalidCredentialsException("User with invalid credentials" + e);
         }

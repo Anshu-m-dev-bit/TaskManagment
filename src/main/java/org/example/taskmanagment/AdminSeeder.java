@@ -28,5 +28,21 @@ public class AdminSeeder implements CommandLineRunner {
             user.setRole(User.Role.ADMIN);
             userRepository.save(user);
         }
+        if (! userRepository.existsByRole(User.Role.MANAGER)) {
+            User user = new User();
+            user.setName("1stManager");
+            user.setEmail("manager@123");
+            user.setPassword(passwordEncoder.encode("adminPassw0rd"));
+            user.setRole(User.Role.MANAGER);
+            userRepository.save(user);
+        }
+        if (! userRepository.existsByRole(User.Role.USER)) {
+            User user = new User();
+            user.setName("1stUser");
+            user.setEmail("user@123");
+            user.setPassword(passwordEncoder.encode("adminPassw0rd"));
+            user.setRole(User.Role.USER);
+            userRepository.save(user);
+        }
     }
 }
