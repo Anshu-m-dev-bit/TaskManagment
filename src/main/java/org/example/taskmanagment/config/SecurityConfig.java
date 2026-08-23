@@ -1,5 +1,6 @@
 package org.example.taskmanagment.config;
 
+import org.example.taskmanagment.security.CustomAccessDeniedHandler;
 import org.example.taskmanagment.security.CustomUserDetailsService;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -47,7 +48,8 @@ public class SecurityConfig {
                                 .requestMatchers(HttpMethod.POST, "/tasks").hasAnyRole("USER", "MANAGER", "ADMIN")
 
                                 .anyRequest().authenticated()
-                                );
+                                ).exceptionHandling(error ->
+                        error.accessDeniedHandler(new CustomAccessDeniedHandler()));
 
 
         return httpSecurity.build();

@@ -72,6 +72,12 @@ public class UserService {
                 .orElseThrow(() -> new UserNotFoundException("User with id " + id + " not found"));
     }
 
+    public User getUserByEmail(String email) {
+        return userRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("User email: " + email + " does not exists"));
+
+    }
+
     public Page<User> getAllUsers(Integer page, Integer size, String sortField, String sortDirection) {
         page = page == null ? 0 : page;
         size = size == null ? 10 : size;
