@@ -22,7 +22,7 @@ public class AuthController {
     @PostMapping("/login")
     public LoginResponse loginUser(@Valid @RequestBody LoginRequest loginDetails) {
         return loginMapper.toLoginResponse(loginDetails,
-                "You are not authorised for this action",
+                "Login Successfully",
                 authService.loginUser(loginDetails));
     }
 }

@@ -9,9 +9,12 @@ import org.example.taskmanagment.exceptions.*;
 import org.example.taskmanagment.repositories.ProjectRepository;
 import org.example.taskmanagment.repositories.TaskRepository;
 import org.example.taskmanagment.repositories.UserRepository;
+import org.example.taskmanagment.security.CustomUserDetails;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
@@ -22,17 +25,22 @@ public class TaskService {
     private final UserRepository userRepository;
     private final ProjectRepository projectRepository;
     private final TaskRepository taskRepository;
+    private final AuthorizationService authorizationService;
 
-    public TaskService(UserRepository userRepository, ProjectRepository projectRepository, TaskRepository taskRepository) {
+
+    public TaskService(UserRepository userRepository, ProjectRepository projectRepository,
+                       TaskRepository taskRepository, AuthorizationService authorizationService) {
         this.userRepository = userRepository;
         this.projectRepository = projectRepository;
         this.taskRepository = taskRepository;
+        this.authorizationService = authorizationService;
     }
 
     private static final Set<String> allowedSortFields = new HashSet<>(Arrays.asList("id", "title", "createdAt", "dueDate", "priority"));
 
     public Task createTask(CreateTaskRequest taskDetails) {
-        Long userId = taskDetails.getUserId();
+
+        Long userId = authorizationService.getAssignableUserId(taskDetails.getUserId());
         Long projectId = taskDetails.getProjectId();
 
         Task task = new Task();
@@ -66,8 +74,7 @@ public class TaskService {
         Task existingTask = taskRepository.findById(id)
                 .orElseThrow(() -> new TaskNotFoundException("Task with id " + id + " not found"));
 
-
-        Long userId = taskDetails.getUserId();
+        Long userId = authorizationService.getAssignableUserId(taskDetails.getUserId());
         Long projectId = taskDetails.getProjectId();
 
         User userToUse = existingTask.getUser();

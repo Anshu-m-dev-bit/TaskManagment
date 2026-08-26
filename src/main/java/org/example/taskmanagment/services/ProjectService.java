@@ -18,10 +18,13 @@ import java.util.*;
 public class ProjectService {
     private final ProjectRepository projectRepository;
     private final UserRepository userRepository;
+    private final AuthorizationService authorizationService;
 
-    public ProjectService(ProjectRepository projectRepository, UserRepository userRepository) {
+    public ProjectService(ProjectRepository projectRepository, UserRepository userRepository,
+                          AuthorizationService authorizationService) {
         this.userRepository = userRepository;
         this.projectRepository = projectRepository;
+        this.authorizationService = authorizationService;
     }
     private final static Set<String> allowedSortFields = new HashSet<>(Arrays.asList("id", "name"));
 
@@ -46,7 +49,8 @@ public class ProjectService {
     public Project createProject(CreateProjectRequest projectDetails) {
         Project project = new Project();
 
-        Set<User> users = defineUsers(projectDetails.getUserIds());
+        Set<User> users = authorizationService.validateProjectAssignment
+                (defineUsers(projectDetails.getUserIds()));
         project.setName(projectDetails.getName());
         project.setDescription(projectDetails.getDescription());
         for (User user: users) {
@@ -118,7 +122,8 @@ public class ProjectService {
                 .orElseThrow(() -> new ProjectNotFoundException("Project with id " + id + " not found"));
 
         Set<User> availableUsers = new HashSet<>(project.getUsers());
-        Set<User> validatedUsers = defineUsers(projectDetails.getUserIds());
+        Set<User> validatedUsers = authorizationService.validateProjectAssignment
+                (defineUsers(projectDetails.getUserIds()));
         for (User user: availableUsers) {
             user.removeProject(project);
         }
@@ -134,7 +139,8 @@ public class ProjectService {
         Project project = projectRepository.findById(id)
                 .orElseThrow(() -> new ProjectNotFoundException("Project with id " + id + " not found"));
 
-        Set<User> validatedUsers = defineUsers(projectDetails.getUserIds());
+        Set<User> validatedUsers = authorizationService.validateProjectAssignment
+                (defineUsers(projectDetails.getUserIds()));
         for (User user: validatedUsers) {
             user.addProject(project);
         }
