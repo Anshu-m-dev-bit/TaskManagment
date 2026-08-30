@@ -16,6 +16,7 @@ public class ProjectMapper {
         projectResponse.setProjectId(project.getId());
         projectResponse.setName(project.getName());
         projectResponse.setDescription(project.getDescription());
+        projectResponse.setCreatedBy(project.getCreatedBy());
         projectResponse.setProjectUserResponse(toProjectUsersResponse(project.getUsers()));
         return projectResponse;
     }

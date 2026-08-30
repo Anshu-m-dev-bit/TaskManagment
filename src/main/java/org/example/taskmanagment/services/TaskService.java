@@ -64,6 +64,7 @@ public class TaskService {
         task.setTitle(taskDetails.getTitle());
         task.setDescription(taskDetails.getDescription());
         if(taskDetails.getStatus() != null) task.setStatus(taskDetails.getStatus());
+        task.setCreatedBy(authorizationService.getCurrentUserId());
         task.setPriority(taskDetails.getPriority());
         task.setDueDate(taskDetails.getDueDate());
 
@@ -193,6 +194,24 @@ public class TaskService {
         Task task = taskRepository.findById(id)
                 .orElseThrow(() -> new TaskNotFoundException("Task with id " + id + " not found"));
 
-        taskRepository.deleteById(id);
+        if (authorizationService.isRequestValid(task.getCreatedBy())) {
+            User user = task.getUser();
+            Project project = task.getProject();
+
+            List<Task> userTasks = user.getTasks();
+            userTasks.remove(task);
+
+            user.setTasks(userTasks);
+
+            List<Task> projectTasks = project.getTasks();
+            projectTasks.remove(task);
+
+            project.setTasks(projectTasks);
+
+            taskRepository.deleteById(id);
+        } else {
+            throw new UserAuthorisationException("User is not permitted to perform this action");
+        }
+
     }
 }

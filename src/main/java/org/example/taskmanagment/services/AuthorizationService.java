@@ -2,8 +2,7 @@ package org.example.taskmanagment.services;
 
 import org.example.taskmanagment.entities.User;
 import org.example.taskmanagment.exceptions.UserAuthorisationException;
-import org.example.taskmanagment.repositories.ProjectRepository;
-import org.example.taskmanagment.repositories.TaskRepository;
+import org.example.taskmanagment.exceptions.UserNotFoundException;
 import org.example.taskmanagment.repositories.UserRepository;
 import org.example.taskmanagment.security.CustomUserDetails;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -15,16 +14,35 @@ import java.util.Set;
 @Component
 public class AuthorizationService {
     private final UserRepository userRepository;
-    private final CustomUserDetails customUserDetails;
 
     public AuthorizationService(UserRepository userRepository) {
         this.userRepository = userRepository;
-        this.customUserDetails = (CustomUserDetails) SecurityContextHolder.getContext()
-                .getAuthentication()
-                .getPrincipal();
+    }
+
+    public Long getCurrentUserId() {
+        CustomUserDetails customUserDetails = (CustomUserDetails) SecurityContextHolder.getContext()
+                .getAuthentication().getPrincipal();
+        User loggedInUser = customUserDetails.getUser();
+        return loggedInUser.getId();
+    }
+
+    public boolean isRequestValid(Long id) {
+        CustomUserDetails customUserDetails = (CustomUserDetails) SecurityContextHolder.getContext()
+                .getAuthentication().getPrincipal();
+
+        User loggedInUser = customUserDetails.getUser();
+
+        User accessedUser = userRepository.findById(id)
+                .orElseThrow(() -> new UserNotFoundException(""));
+
+        return loggedInUser.equals(accessedUser)
+                || loggedInUser.getRole() != User.Role.USER;
     }
 
     public Long getAssignableUserId(Long assignedUserId) {
+        CustomUserDetails customUserDetails = (CustomUserDetails) SecurityContextHolder.getContext()
+                .getAuthentication().getPrincipal();
+
         User loggedInUser = customUserDetails.getUser();
 
         User.Role assignedUserRole = userRepository.findById(assignedUserId).get().getRole();
@@ -47,7 +65,6 @@ public class AuthorizationService {
 
         User loggedInUser = customUserDetails.getUser();
         Set<User> assignedUsers = new HashSet<>();
-        assignedUsers.add(loggedInUser);
 
 
         if (loggedInUser.getRole() == User.Role.MANAGER) {
@@ -59,7 +76,7 @@ public class AuthorizationService {
             }
         } else if (loggedInUser.getRole() == User.Role.ADMIN) {
             for (User user: assignedUserIds) {
-                if (user.getRole() == User.Role.ADMIN && !loggedInUser.getId().equals(user.getId())) {
+                if (!loggedInUser.getId().equals(user.getId()) && user.getRole() == User.Role.ADMIN) {
                     throw new UserAuthorisationException("User is not authorized to perform this action");
                 }
                 assignedUsers.add(user);
@@ -69,13 +86,6 @@ public class AuthorizationService {
         }
 
         return assignedUsers;
-    }
-
-    public boolean isUserDeleteTaskRequestValid() {
-        return false;
-    }
-    public boolean isUserDeleteProjectRequestValid() {
-        return false;
     }
 
 }

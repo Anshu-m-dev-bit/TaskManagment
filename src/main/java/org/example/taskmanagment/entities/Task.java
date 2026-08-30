@@ -21,6 +21,10 @@ public class Task {
     @Column(nullable = true)
     private String description;
 
+    @Column(nullable = false)
+    @NotBlank(message = "User Id of the created by is required")
+    private Long createdBy;
+
     @NotNull
     @Column(nullable = false)
     @Enumerated(EnumType.STRING)
@@ -119,5 +123,13 @@ public class Task {
 
     public void setUser(User user) {
         this.user = user;
+    }
+
+    public void setCreatedBy(Long createdBy) {
+        this.createdBy = createdBy;
+    }
+
+    public Long getCreatedBy() {
+        return createdBy;
     }
 }

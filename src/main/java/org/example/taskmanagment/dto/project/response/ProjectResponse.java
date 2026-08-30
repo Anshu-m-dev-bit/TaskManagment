@@ -14,6 +14,7 @@ public class ProjectResponse {
     Long projectId;
     String name;
     String description;
+    Long createdBy;
     Set<ProjectUserResponse> projectUserResponse;
 }
 

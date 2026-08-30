@@ -3,6 +3,7 @@ package org.example.taskmanagment.entities;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import org.hibernate.annotations.Changelog;
 
 import java.util.HashSet;
@@ -22,6 +23,10 @@ public class Project {
 
     @Column(nullable = true)
     private String description;
+
+    @Column(nullable = false)
+    @NotNull
+    private Long createdBy;
 
     @ManyToMany(mappedBy = "projects")
     Set<User> users = new HashSet<>();
@@ -80,5 +85,13 @@ public class Project {
 
     public void setTasks(List<Task> tasks) {
         this.tasks = tasks;
+    }
+
+    public void setCreatedBy(Long createdBy) {
+        this.createdBy = createdBy;
+    }
+
+    public Long getCreatedBy() {
+        return createdBy;
     }
 }

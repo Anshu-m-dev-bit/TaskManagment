@@ -2,6 +2,7 @@ package org.example.taskmanagment.services;
 
 import org.example.taskmanagment.dto.project.request.*;
 import org.example.taskmanagment.entities.Project;
+import org.example.taskmanagment.entities.Task;
 import org.example.taskmanagment.entities.User;
 import org.example.taskmanagment.exceptions.*;
 import org.example.taskmanagment.repositories.ProjectRepository;
@@ -10,6 +11,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.PathVariable;
 
 import java.util.*;
@@ -19,12 +21,14 @@ public class ProjectService {
     private final ProjectRepository projectRepository;
     private final UserRepository userRepository;
     private final AuthorizationService authorizationService;
+    private final TaskService taskService;
 
     public ProjectService(ProjectRepository projectRepository, UserRepository userRepository,
-                          AuthorizationService authorizationService) {
+                          AuthorizationService authorizationService, TaskService taskService) {
         this.userRepository = userRepository;
         this.projectRepository = projectRepository;
         this.authorizationService = authorizationService;
+        this.taskService = taskService;
     }
     private final static Set<String> allowedSortFields = new HashSet<>(Arrays.asList("id", "name"));
 
@@ -46,6 +50,7 @@ public class ProjectService {
         return validatedUsers;
     }
 
+    @Transactional
     public Project createProject(CreateProjectRequest projectDetails) {
         Project project = new Project();
 
@@ -53,6 +58,7 @@ public class ProjectService {
                 (defineUsers(projectDetails.getUserIds()));
         project.setName(projectDetails.getName());
         project.setDescription(projectDetails.getDescription());
+        project.setCreatedBy(authorizationService.getCurrentUserId());
         for (User user: users) {
             user.addProject(project);
         }
@@ -114,7 +120,23 @@ public class ProjectService {
         Project project = projectRepository.findById(id)
                 .orElseThrow(() -> new ProjectNotFoundException("Project with id " + id + " not found"));
 
-        projectRepository.deleteById(id);
+        if (authorizationService.isRequestValid(project.getCreatedBy())) {
+            List<Task> tasks = project.getTasks();
+            for (Task task: tasks) {
+                taskService.deleteTask(task.getId());
+            }
+
+            Set<User> users = project.getUsers();
+            for (User user: users) {
+                user.removeProject(project);
+            }
+
+            projectRepository.deleteById(id);
+        }
+        else {
+            throw new UserAuthorisationException("User is not permitted to perform this action");
+        }
+
     }
 
     public Project replaceProjectMembers(Long id, ReplaceProjectMembersRequest projectDetails) {

@@ -14,6 +14,7 @@ public class TaskResponse {
     Long taskId;
     String title;
     String description;
+    Long createdBy;
     Task.CurrStatus status;
     Task.CurrPriority priority;
     LocalDate dueDate;
