@@ -1,16 +1,19 @@
 spring:
   application:
     name: TaskManagment
+
+  datasource:
+    url: jdbc:postgresql://localhost:5432/task_manager
+    username: task_manager_app
+    password: Forgot@247
+
   jpa:
     hibernate:
-      ddl-auto: create   # or create-drop
+      ddl-auto: create
     properties:
       hibernate:
         format_sql: true
         use_sql_comments: true
-  h2:
-    console:
-      enabled: true
 
 logging:
   level:

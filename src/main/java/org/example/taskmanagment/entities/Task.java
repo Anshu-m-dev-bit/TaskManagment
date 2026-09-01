@@ -22,7 +22,7 @@ public class Task {
     private String description;
 
     @Column(nullable = false)
-    @NotBlank(message = "User Id of the created by is required")
+    @NotNull
     private Long createdBy;
 
     @NotNull
