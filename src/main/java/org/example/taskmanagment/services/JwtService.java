@@ -4,17 +4,25 @@ import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jws;
 import io.jsonwebtoken.JwtBuilder;
 import io.jsonwebtoken.Jwts;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.stereotype.Service;
 
 import javax.crypto.SecretKey;
+import javax.crypto.spec.SecretKeySpec;
+import java.util.Base64;
 import java.util.Date;
 
 @Service
 public class JwtService {
 
-    private final SecretKey secretKey = Jwts.SIG.HS256.key().build();
+    public JwtService(@Value("${JWT_SECRET}") String encodedKey) {
+        byte[] objectBytes = Base64.getDecoder().decode(encodedKey);
+        this.secretKey = new SecretKeySpec(objectBytes, "HmacSHA256");
+    }
+
+    private final SecretKey secretKey;
 
     private Claims parseTokens (String token) {
          Jws<Claims> claims = Jwts.parser()

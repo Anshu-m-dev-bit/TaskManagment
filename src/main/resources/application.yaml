@@ -3,9 +3,9 @@ spring:
     name: TaskManagment
 
   datasource:
-    url: jdbc:postgresql://localhost:5432/task_manager
-    username: task_manager_app
-    password: Forgot@247
+    url: ${POSTGRES_URL}
+    username: ${POSTGRES_USERNAME}
+    password: ${POSTGRES_PASSWORD}
 
   jpa:
     hibernate:
