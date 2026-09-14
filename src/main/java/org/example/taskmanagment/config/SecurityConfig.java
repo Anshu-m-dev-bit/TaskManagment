@@ -37,15 +37,17 @@ public class SecurityConfig {
                         request.requestMatchers("/auth/**").permitAll()
 
                                 .requestMatchers(HttpMethod.GET, "/users").hasAnyRole("USER", "MANAGER", "ADMIN")
-                                .requestMatchers(HttpMethod.POST, "/users").hasRole("ADMIN")
+                                .requestMatchers(HttpMethod.POST, "/users/**").hasRole("ADMIN")
+                                .requestMatchers(HttpMethod.DELETE, "/users/**").hasAnyRole("ADMIN")
 
                                 .requestMatchers(HttpMethod.GET, "/projects").hasAnyRole("USER", "MANAGER", "ADMIN")
-                                .requestMatchers(HttpMethod.POST, "/projects").hasAnyRole("MANAGER", "ADMIN")
-                                .requestMatchers(HttpMethod.PUT, "/projects").hasAnyRole("MANAGER", "ADMIN")
-                                .requestMatchers(HttpMethod.DELETE, "/projects").hasAnyRole("MANAGER", "ADMIN")
+                                .requestMatchers(HttpMethod.POST, "/projects/**").hasAnyRole("MANAGER", "ADMIN")
+                                .requestMatchers(HttpMethod.PUT, "/projects/**").hasAnyRole("MANAGER", "ADMIN")
+                                .requestMatchers(HttpMethod.DELETE, "/projects/**").hasAnyRole("MANAGER", "ADMIN")
 
                                 .requestMatchers(HttpMethod.GET, "/tasks").hasAnyRole("USER", "MANAGER", "ADMIN")
-                                .requestMatchers(HttpMethod.POST, "/tasks").hasAnyRole("USER", "MANAGER", "ADMIN")
+                                .requestMatchers(HttpMethod.POST, "/tasks/**").hasAnyRole("USER", "MANAGER", "ADMIN")
+                                .requestMatchers(HttpMethod.DELETE, "/tasks/**").hasAnyRole("USER", "MANAGER", "ADMIN")
 
                                 .anyRequest().authenticated()
                                 ).exceptionHandling(error ->

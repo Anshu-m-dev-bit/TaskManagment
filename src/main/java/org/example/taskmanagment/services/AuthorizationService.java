@@ -36,7 +36,9 @@ public class AuthorizationService {
                 .orElseThrow(() -> new UserNotFoundException(""));
 
         return loggedInUser.equals(accessedUser)
-                || loggedInUser.getRole() != User.Role.USER;
+                || (accessedUser.getRole() == User.Role.USER
+                    && (loggedInUser.getRole() == User.Role.ADMIN || loggedInUser.getRole() == User.Role.MANAGER))
+                || (accessedUser.getRole() == User.Role.MANAGER && loggedInUser.getRole() == User.Role.ADMIN);
     }
 
     public Long getAssignableUserId(Long assignedUserId) {

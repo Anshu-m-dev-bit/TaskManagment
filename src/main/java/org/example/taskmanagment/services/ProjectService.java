@@ -70,6 +70,10 @@ public class ProjectService {
         Project existingProject = projectRepository.findById(id)
                 .orElseThrow(() -> new ProjectNotFoundException("Project with id " + id + " not found"));
 
+        if (!authorizationService.isRequestValid(existingProject.getCreatedBy())) {
+            throw new UserAuthorisationException("User is not permitted to perform this action");
+        }
+
         if (projectDetails.getName() != null && !projectDetails.getName().isBlank()) {
          existingProject.setName(projectDetails.getName());
         }
@@ -143,6 +147,10 @@ public class ProjectService {
         Project project = projectRepository.findById(id)
                 .orElseThrow(() -> new ProjectNotFoundException("Project with id " + id + " not found"));
 
+        if (!authorizationService.isRequestValid(project.getCreatedBy())) {
+            throw new UserAuthorisationException("User is not permitted to perform this action");
+        }
+
         Set<User> availableUsers = new HashSet<>(project.getUsers());
         Set<User> validatedUsers = authorizationService.validateProjectAssignment
                 (defineUsers(projectDetails.getUserIds()));
@@ -161,6 +169,10 @@ public class ProjectService {
         Project project = projectRepository.findById(id)
                 .orElseThrow(() -> new ProjectNotFoundException("Project with id " + id + " not found"));
 
+        if (!authorizationService.isRequestValid(project.getCreatedBy())) {
+            throw new UserAuthorisationException("User is not permitted to perform this action");
+        }
+
         Set<User> validatedUsers = authorizationService.validateProjectAssignment
                 (defineUsers(projectDetails.getUserIds()));
         for (User user: validatedUsers) {
@@ -173,6 +185,10 @@ public class ProjectService {
     public Project removeProjectMembers(Long id, RemoveProjectMembersRequest projectDetails) {
         Project project = projectRepository.findById(id)
                 .orElseThrow(() -> new ProjectNotFoundException("Project with id " + id + " not found"));
+
+        if (!authorizationService.isRequestValid(project.getCreatedBy())) {
+            throw new UserAuthorisationException("User is not permitted to perform this action");
+        }
 
         Set<User> availableUsers = project.getUsers();
         Set<User> validatedUsers = defineUsers(projectDetails.getUserIds());
